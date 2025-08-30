@@ -11,12 +11,28 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-here')
-database_url = os.environ.get('DATABASE_URL', 'postgresql://postgres:1234@localhost/calckal')
-# Исправляем URL для psycopg3
-if database_url.startswith('postgresql://'):
+
+# Получаем DATABASE_URL из переменных окружения
+database_url = os.environ.get('DATABASE_URL')
+if not database_url:
+    # Локальная разработка
+    database_url = 'postgresql://postgres:1234@localhost/calckal'
+    
+# Исправляем URL для psycopg3 (Render использует postgres:// вместо postgresql://)
+if database_url.startswith('postgres://'):
+    database_url = database_url.replace('postgres://', 'postgresql+psycopg://', 1)
+elif database_url.startswith('postgresql://'):
     database_url = database_url.replace('postgresql://', 'postgresql+psycopg://', 1)
+
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Добавляем настройки для продакшена
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    'pool_timeout': 20,
+    'pool_recycle': -1,
+    'pool_pre_ping': True
+}
 
 db = SQLAlchemy(app)
 
@@ -112,41 +128,53 @@ class UserProfile(db.Model):
 # Маршруты
 @app.route('/')
 def index():
-    today = dt.date.today()
-    
-    # Получаем записи за сегодня
-    today_entries = FoodEntry.query.filter_by(date=today).all()
-    
-    # Подсчитываем общие калории за день
-    total_calories = sum(entry.total_calories for entry in today_entries)
-    total_protein = sum(entry.total_protein for entry in today_entries)
-    total_carbs = sum(entry.total_carbs for entry in today_entries)
-    total_fat = sum(entry.total_fat for entry in today_entries)
-    
-    # Группируем по типам приема пищи
-    meals = {
-        'завтрак': [],
-        'обед': [],
-        'ужин': [],
-        'перекус': []
-    }
-    
-    for entry in today_entries:
-        if entry.meal_type in meals:
-            meals[entry.meal_type].append(entry)
-    
-    # Получаем профиль пользователя
-    profile = UserProfile.query.first()
-    target_calories = profile.target_calories if profile and profile.target_calories else 2000
-    
-    return render_template('index.html', 
-                         meals=meals,
-                         total_calories=total_calories,
-                         total_protein=total_protein,
-                         total_carbs=total_carbs,
-                         total_fat=total_fat,
-                         target_calories=target_calories,
-                         today=today)
+    try:
+        today = dt.date.today()
+        
+        # Получаем записи за сегодня
+        today_entries = FoodEntry.query.filter_by(date=today).all()
+        
+        # Подсчитываем общие калории за день
+        total_calories = sum(entry.total_calories for entry in today_entries)
+        total_protein = sum(entry.total_protein for entry in today_entries)
+        total_carbs = sum(entry.total_carbs for entry in today_entries)
+        total_fat = sum(entry.total_fat for entry in today_entries)
+        
+        # Группируем по типам приема пищи
+        meals = {
+            'завтрак': [],
+            'обед': [],
+            'ужин': [],
+            'перекус': []
+        }
+        
+        for entry in today_entries:
+            if entry.meal_type in meals:
+                meals[entry.meal_type].append(entry)
+        
+        # Получаем профиль пользователя
+        profile = UserProfile.query.first()
+        target_calories = profile.target_calories if profile and profile.target_calories else 2000
+        
+        return render_template('index.html', 
+                             meals=meals,
+                             total_calories=total_calories,
+                             total_protein=total_protein,
+                             total_carbs=total_carbs,
+                             total_fat=total_fat,
+                             target_calories=target_calories,
+                             today=today)
+    except Exception as e:
+        logging.error(f"Database error in index route: {str(e)}")
+        flash('Ошибка подключения к базе данных. Проверьте настройки подключения.', 'error')
+        return render_template('index.html', 
+                             meals={'завтрак': [], 'обед': [], 'ужин': [], 'перекус': []},
+                             total_calories=0,
+                             total_protein=0,
+                             total_carbs=0,
+                             total_fat=0,
+                             target_calories=2000,
+                             today=dt.date.today())
 
 @app.route('/products')
 def products():
@@ -641,5 +669,72 @@ def migrate_db():
         flash(f'Ошибка при обновлении БД: {str(e)}', 'danger')
         return redirect(url_for('products'))
 
+def create_tables():
+    """Create database tables if they don't exist"""
+    try:
+        with app.app_context():
+            db.create_all()
+            logging.info("Database tables created successfully")
+            
+            # Add some default products if none exist
+            if Product.query.count() == 0:
+                default_products = [
+                    Product(name="Хлеб белый", calories_per_100g=265, protein=8.1, carbs=48.8, fat=3.2, category="Хлебобулочные"),
+                    Product(name="Молоко 3.2%", calories_per_100g=60, protein=2.9, carbs=4.7, fat=3.2, category="Молочные"),
+                    Product(name="Яйцо куриное", calories_per_100g=155, protein=12.7, carbs=0.7, fat=10.9, category="Мясо и яйца"),
+                    Product(name="Рис белый", calories_per_100g=365, protein=7.5, carbs=78.9, fat=0.7, category="Крупы"),
+                    Product(name="Курица грудка", calories_per_100g=165, protein=31.0, carbs=0.0, fat=3.6, category="Мясо и яйца"),
+                    Product(name="Яблоко", calories_per_100g=47, protein=0.4, carbs=9.8, fat=0.4, category="Фрукты"),
+                    Product(name="Банан", calories_per_100g=96, protein=1.5, carbs=21.0, fat=0.2, category="Фрукты"),
+                    Product(name="Картофель", calories_per_100g=80, protein=2.0, carbs=16.3, fat=0.4, category="Овощи")
+                ]
+                
+                for product in default_products:
+                    db.session.add(product)
+                
+                db.session.commit()
+                logging.info(f"Added {len(default_products)} default products")
+                
+    except Exception as e:
+        logging.error(f"Error creating database tables: {str(e)}")
+        raise
+
+def check_database_connection():
+    """Check if database connection is working"""
+    try:
+        with app.app_context():
+            # Try to execute a simple query
+            db.session.execute(db.text('SELECT 1'))
+            logging.info("Database connection successful")
+            return True
+    except Exception as e:
+        logging.error(f"Database connection failed: {str(e)}")
+        return False
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Check database connection before starting the app
+    if check_database_connection():
+        # Create tables if they don't exist
+        create_tables()
+        logging.info("Starting Flask application...")
+        
+        # Определяем порт для Render
+        port = int(os.environ.get('PORT', 5000))
+        
+        # Запускаем приложение
+        app.run(host='0.0.0.0', port=port, debug=False)
+    else:
+        logging.error("Cannot start application - database connection failed")
+        print("\n" + "="*50)
+        print("DATABASE CONNECTION ERROR")
+        print("="*50)
+        print("The application cannot connect to PostgreSQL database.")
+        print("\nPossible solutions:")
+        print("1. Make sure PostgreSQL is running")
+        print("2. Check database credentials in the connection string")
+        print("3. Verify the database 'calckal' exists")
+        print("4. For local development, ensure the connection string is:")
+        print("   postgresql://postgres:1234@localhost/calckal")
+        print("5. Set DATABASE_URL environment variable if different")
+        print("\nCurrent DATABASE_URL:", os.environ.get('DATABASE_URL', 'not set'))
+        print("="*50)

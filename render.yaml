@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: calckal-app
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: SECRET_KEY
+        generateValue: true
+  - type: pserv
+    name: calckal-db
+    env: postgresql
+    plan: free
+    databaseName: calckal
+    user: calckal_user
