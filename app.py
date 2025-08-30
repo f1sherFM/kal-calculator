@@ -641,13 +641,15 @@ def migrate_db():
         flash(f'Ошибка при обновлении БД: {str(e)}', 'danger')
         return redirect(url_for('products'))
 
-@app.before_first_request
+@app.before_request
 def create_tables():
-    try:
-        db.create_all()
-        logging.info("Таблицы БД созданы/проверены")
-    except Exception as e:
-        logging.error(f"Ошибка создания таблиц: {e}")
+    if not hasattr(create_tables, 'done'):
+        try:
+            db.create_all()
+            logging.info("Таблицы БД созданы/проверены")
+            create_tables.done = True
+        except Exception as e:
+            logging.error(f"Ошибка создания таблиц: {e}")
 
 if __name__ == '__main__':
     with app.app_context():
