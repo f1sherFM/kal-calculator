@@ -1175,11 +1175,7 @@ def cleanup_duplicates():
         """))
         
         # Handle rowcount access for SQLAlchemy 2.x compatibility
-        try:
-            updated_entries = update_result.rowcount
-        except AttributeError:
-            # Fallback for SQLAlchemy 2.x where rowcount might not be available
-            updated_entries = 0
+        updated_entries = getattr(update_result, 'rowcount', 0)
         logging.info(f"Обновлено {updated_entries} food_entries")
         
         # Шаг 2: Удаляем дубликаты одним запросом
@@ -1204,11 +1200,7 @@ def cleanup_duplicates():
         """))
         
         # Handle rowcount access for SQLAlchemy 2.x compatibility
-        try:
-            deleted_count = delete_result.rowcount
-        except AttributeError:
-            # Fallback for SQLAlchemy 2.x where rowcount might not be available
-            deleted_count = 0
+        deleted_count = getattr(delete_result, 'rowcount', 0)
         logging.info(f"Удалено {deleted_count} дубликатов")
         
         db.session.commit()
