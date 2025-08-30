@@ -641,31 +641,30 @@ def migrate_db():
         flash(f'Ошибка при обновлении БД: {str(e)}', 'danger')
         return redirect(url_for('products'))
 
-@app.before_request
-def create_tables():
-    if not hasattr(create_tables, 'done'):
+def init_db():
+    """Инициализация БД с повторными попытками"""
+    max_retries = 3
+    for attempt in range(max_retries):
         try:
-            db.create_all()
-            logging.info("Таблицы БД созданы/проверены")
-            create_tables.done = True
+            with app.app_context():
+                db.create_all()
+                logging.info("Таблицы БД созданы/проверены")
+                return True
         except Exception as e:
-            logging.error(f"Ошибка создания таблиц: {e}")
+            logging.error(f"Попытка {attempt + 1}/{max_retries} создания БД неудачна: {e}")
+            if attempt < max_retries - 1:
+                import time
+                time.sleep(2)
+    return False
+
+@app.before_request
+def ensure_db():
+    if not hasattr(ensure_db, 'initialized'):
+        if init_db():
+            ensure_db.initialized = True
+        else:
+            logging.error("Не удалось инициализировать БД после всех попыток")
 
 if __name__ == '__main__':
-    with app.app_context():
-        logging.info("Запуск приложения...")
-        try:
-            db.create_all()
-            logging.info("Таблицы БД созданы/проверены")
-            
-            # Проверяем количество продуктов в БД
-            current_products_count = Product.query.count()
-            logging.info(f"Текущее количество продуктов в БД: {current_products_count}")
-            
-            # Инициализация завершена
-            logging.info("Инициализация БД завершена")
-        except Exception as e:
-            logging.error(f"Ошибка инициализации БД: {e}")
-    
     logging.info("Запускаем Flask сервер...")
     app.run(debug=True)
