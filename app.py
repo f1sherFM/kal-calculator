@@ -774,6 +774,112 @@ def quick_add_food():
         logging.error(f"Ошибка при быстром добавлении продукта: {str(e)}")
         return jsonify({'success': False, 'message': 'Произошла ошибка при добавлении'})
 
+@app.route('/load_mega_products')
+def load_mega_products():
+    """Загружает еще больше продуктов в базу данных"""
+    try:
+        current_count = Product.query.count()
+        logging.info(f"Current product count: {current_count}")
+        
+        # Проверяем, не загружены ли уже мега-продукты
+        if current_count > 120:
+            flash(f'Мега-продукты уже загружены! Всего: {current_count}', 'info')
+            return redirect(url_for('products'))
+        
+        # Мега-набор продуктов
+        mega_products = [
+            # Рыба дополнительно
+            Product(name="Скумбрия", calories_per_100g=191, protein=18.0, carbs=0.0, fat=13.2, category="Рыба и морепродукты"),
+            Product(name="Сельдь", calories_per_100g=246, protein=17.7, carbs=0.0, fat=19.5, category="Рыба и морепродукты"),
+            Product(name="Мидии", calories_per_100g=77, protein=11.5, carbs=3.3, fat=2.0, category="Рыба и морепродукты"),
+            Product(name="Краб", calories_per_100g=85, protein=16.0, carbs=0.0, fat=3.6, category="Рыба и морепродукты"),
+            Product(name="Камбала", calories_per_100g=83, protein=16.1, carbs=0.0, fat=2.6, category="Рыба и морепродукты"),
+            
+            # Овощи дополнительно
+            Product(name="Капуста цветная", calories_per_100g=30, protein=2.5, carbs=4.2, fat=0.3, category="Овощи"),
+            Product(name="Капуста квашеная", calories_per_100g=23, protein=1.8, carbs=4.4, fat=0.1, category="Овощи"),
+            Product(name="Перец болгарский", calories_per_100g=27, protein=1.3, carbs=5.3, fat=0.1, category="Овощи"),
+            Product(name="Баклажаны", calories_per_100g=24, protein=1.2, carbs=4.5, fat=0.1, category="Овощи"),
+            Product(name="Кабачки", calories_per_100g=24, protein=0.6, carbs=4.6, fat=0.3, category="Овощи"),
+            Product(name="Тыква", calories_per_100g=22, protein=1.0, carbs=4.4, fat=0.1, category="Овощи"),
+            Product(name="Редис", calories_per_100g=19, protein=1.2, carbs=3.4, fat=0.1, category="Овощи"),
+            Product(name="Шпинат", calories_per_100g=22, protein=2.9, carbs=2.0, fat=0.3, category="Овощи"),
+            
+            # Фрукты дополнительно
+            Product(name="Виноград", calories_per_100g=65, protein=0.6, carbs=15.4, fat=0.2, category="Фрукты"),
+            Product(name="Вишня", calories_per_100g=52, protein=1.1, carbs=11.3, fat=0.2, category="Фрукты"),
+            Product(name="Черешня", calories_per_100g=50, protein=1.1, carbs=10.6, fat=0.4, category="Фрукты"),
+            Product(name="Персик", calories_per_100g=46, protein=0.9, carbs=11.1, fat=0.1, category="Фрукты"),
+            Product(name="Абрикос", calories_per_100g=44, protein=0.9, carbs=9.0, fat=0.1, category="Фрукты"),
+            Product(name="Слива", calories_per_100g=42, protein=0.8, carbs=9.6, fat=0.3, category="Фрукты"),
+            Product(name="Лимон", calories_per_100g=16, protein=0.9, carbs=3.0, fat=0.1, category="Фрукты"),
+            Product(name="Мандарин", calories_per_100g=38, protein=0.8, carbs=7.5, fat=0.2, category="Фрукты"),
+            Product(name="Ананас", calories_per_100g=52, protein=0.4, carbs=11.8, fat=0.1, category="Фрукты"),
+            Product(name="Манго", calories_per_100g=67, protein=0.6, carbs=15.0, fat=0.4, category="Фрукты"),
+            
+            # Ягоды дополнительно
+            Product(name="Смородина черная", calories_per_100g=44, protein=1.0, carbs=7.3, fat=0.4, category="Ягоды"),
+            Product(name="Смородина красная", calories_per_100g=43, protein=0.6, carbs=7.7, fat=0.2, category="Ягоды"),
+            Product(name="Крыжовник", calories_per_100g=45, protein=0.7, carbs=9.1, fat=0.2, category="Ягоды"),
+            Product(name="Брусника", calories_per_100g=43, protein=0.7, carbs=8.2, fat=0.5, category="Ягоды"),
+            
+            # Орехи дополнительно
+            Product(name="Фундук", calories_per_100g=704, protein=16.1, carbs=9.9, fat=66.9, category="Орехи и семечки"),
+            Product(name="Кешью", calories_per_100g=553, protein=25.7, carbs=13.2, fat=42.2, category="Орехи и семечки"),
+            Product(name="Семечки тыквы", calories_per_100g=559, protein=24.5, carbs=4.7, fat=49.1, category="Орехи и семечки"),
+            
+            # Молочка дополнительно
+            Product(name="Молоко 1.5%", calories_per_100g=47, protein=3.0, carbs=4.9, fat=1.5, category="Молочные"),
+            Product(name="Молоко обезжиренное", calories_per_100g=35, protein=3.4, carbs=5.0, fat=0.1, category="Молочные"),
+            Product(name="Ряженка", calories_per_100g=67, protein=2.9, carbs=4.2, fat=4.0, category="Молочные"),
+            Product(name="Простокваша", calories_per_100g=58, protein=2.9, carbs=4.1, fat=3.2, category="Молочные"),
+            
+            # Крупы дополнительно
+            Product(name="Рис бурый", calories_per_100g=337, protein=6.3, carbs=65.1, fat=4.4, category="Крупы"),
+            Product(name="Перловка", calories_per_100g=315, protein=9.3, carbs=73.7, fat=1.1, category="Крупы"),
+            Product(name="Кукурузная крупа", calories_per_100g=328, protein=8.3, carbs=71.0, fat=1.2, category="Крупы"),
+            Product(name="Булгур", calories_per_100g=342, protein=12.3, carbs=57.6, fat=1.3, category="Крупы"),
+            
+            # Бобовые дополнительно
+            Product(name="Фасоль красная", calories_per_100g=93, protein=8.4, carbs=13.7, fat=0.3, category="Бобовые"),
+            Product(name="Соя", calories_per_100g=381, protein=34.9, carbs=17.3, fat=17.8, category="Бобовые"),
+            
+            # Макароны дополнительно
+            Product(name="Лапша", calories_per_100g=322, protein=10.4, carbs=70.5, fat=1.1, category="Макаронные изделия"),
+            Product(name="Лазанья", calories_per_100g=348, protein=13.0, carbs=70.2, fat=1.4, category="Макаронные изделия"),
+            
+            # Напитки дополнительно
+            Product(name="Чай зеленый", calories_per_100g=1, protein=0.0, carbs=0.0, fat=0.0, category="Напитки"),
+            Product(name="Сок яблочный", calories_per_100g=46, protein=0.1, carbs=11.3, fat=0.1, category="Напитки"),
+            Product(name="Компот", calories_per_100g=60, protein=0.2, carbs=15.0, fat=0.1, category="Напитки"),
+            
+            # Сладости дополнительно
+            Product(name="Шоколад молочный", calories_per_100g=534, protein=7.6, carbs=60.2, fat=29.7, category="Сладости"),
+            Product(name="Печенье овсяное", calories_per_100g=437, protein=6.5, carbs=71.4, fat=14.1, category="Сладости"),
+            Product(name="Вафли", calories_per_100g=425, protein=8.2, carbs=65.1, fat=14.6, category="Сладости"),
+            Product(name="Мармелад", calories_per_100g=321, protein=0.1, carbs=77.7, fat=0.1, category="Сладости"),
+            Product(name="Зефир", calories_per_100g=304, protein=0.8, carbs=79.8, fat=0.0, category="Сладости")
+        ]
+        
+        # Добавляем мега-продукты
+        for product in mega_products:
+            db.session.add(product)
+        
+        db.session.commit()
+        
+        new_count = Product.query.count()
+        added_count = len(mega_products)
+        
+        flash(f'Мега-успех! Добавлено {added_count} продуктов! Общее: {new_count}', 'success')
+        logging.info(f"Added mega {added_count} products, total: {new_count}")
+        
+        return redirect(url_for('products'))
+        
+    except Exception as e:
+        logging.error(f"Error loading mega products: {str(e)}")
+        flash(f'Ошибка: {str(e)}', 'error')
+        return redirect(url_for('products'))
+
 @app.route('/load_all_products')
 def load_all_products():
     """Загружает дополнительные продукты в базу данных"""
@@ -858,6 +964,127 @@ def load_all_products():
     except Exception as e:
         logging.error(f"Error loading additional products: {str(e)}")
         flash(f'Ошибка: {str(e)}', 'error')
+        return redirect(url_for('products'))
+
+@app.route('/load_mega_products')
+def load_mega_products():
+    """Добавляет МЕГА набор продуктов (50+ дополнительных продуктов)"""
+    try:
+        current_count = Product.query.count()
+        logging.info(f"Current product count: {current_count}")
+        
+        # Проверяем, не добавляли ли уже мега-продукты
+        if current_count > 120:
+            flash('Мега-продукты уже добавлены! Используйте другие endpoints для добавления.', 'info')
+            return redirect(url_for('products'))
+        
+        mega_products = [
+            # Дополнительная рыба и морепродукты
+            Product(name="Судак", calories_per_100g=84, protein=19.0, carbs=0.0, fat=0.8, category="Рыба и морепродукты"),
+            Product(name="Семга", calories_per_100g=219, protein=20.8, carbs=0.0, fat=15.1, category="Рыба и морепродукты"),
+            Product(name="Тунец", calories_per_100g=96, protein=23.0, carbs=0.0, fat=1.0, category="Рыба и морепродукты"),
+            Product(name="Горбуша", calories_per_100g=147, protein=21.0, carbs=0.0, fat=7.0, category="Рыба и морепродукты"),
+            Product(name="Камбала", calories_per_100g=83, protein=16.1, carbs=0.0, fat=2.6, category="Рыба и морепродукты"),
+            Product(name="Щука", calories_per_100g=84, protein=18.8, carbs=0.0, fat=1.1, category="Рыба и морепродукты"),
+            Product(name="Кальмары", calories_per_100g=74, protein=18.0, carbs=0.3, fat=0.3, category="Рыба и морепродукты"),
+            Product(name="Мидии", calories_per_100g=77, protein=11.5, carbs=3.3, fat=2.0, category="Рыба и морепродукты"),
+            Product(name="Краб", calories_per_100g=85, protein=16.0, carbs=0.0, fat=3.6, category="Рыба и морепродукты"),
+            
+            # Дополнительные овощи
+            Product(name="Капуста цветная", calories_per_100g=30, protein=2.5, carbs=4.2, fat=0.3, category="Овощи"),
+            Product(name="Перец болгарский красный", calories_per_100g=27, protein=1.3, carbs=5.3, fat=0.1, category="Овощи"),
+            Product(name="Чеснок", calories_per_100g=143, protein=6.5, carbs=29.9, fat=0.5, category="Овощи"),
+            Product(name="Свекла", calories_per_100g=40, protein=1.5, carbs=8.8, fat=0.1, category="Овощи"),
+            Product(name="Редис", calories_per_100g=19, protein=1.2, carbs=3.4, fat=0.1, category="Овощи"),
+            Product(name="Салат листовой", calories_per_100g=12, protein=1.5, carbs=1.3, fat=0.2, category="Овощи"),
+            Product(name="Шпинат", calories_per_100g=22, protein=2.9, carbs=2.0, fat=0.3, category="Овощи"),
+            Product(name="Кабачки", calories_per_100g=24, protein=0.6, carbs=4.6, fat=0.3, category="Овощи"),
+            Product(name="Баклажаны", calories_per_100g=24, protein=1.2, carbs=4.5, fat=0.1, category="Овощи"),
+            Product(name="Тыква", calories_per_100g=22, protein=1.0, carbs=4.4, fat=0.1, category="Овощи"),
+            Product(name="Петрушка", calories_per_100g=47, protein=3.7, carbs=7.6, fat=0.4, category="Овощи"),
+            Product(name="Укроп", calories_per_100g=40, protein=2.5, carbs=6.3, fat=0.5, category="Овощи"),
+            
+            # Дополнительные фрукты и ягоды
+            Product(name="Мандарин", calories_per_100g=38, protein=0.8, carbs=7.5, fat=0.2, category="Фрукты"),
+            Product(name="Лимон", calories_per_100g=16, protein=0.9, carbs=3.0, fat=0.1, category="Фрукты"),
+            Product(name="Виноград", calories_per_100g=65, protein=0.6, carbs=15.4, fat=0.2, category="Фрукты"),
+            Product(name="Вишня", calories_per_100g=52, protein=1.1, carbs=11.3, fat=0.2, category="Фрукты"),
+            Product(name="Черешня", calories_per_100g=50, protein=1.1, carbs=10.6, fat=0.4, category="Фрукты"),
+            Product(name="Слива", calories_per_100g=42, protein=0.8, carbs=9.6, fat=0.3, category="Фрукты"),
+            Product(name="Персик", calories_per_100g=46, protein=0.9, carbs=11.1, fat=0.1, category="Фрукты"),
+            Product(name="Абрикос", calories_per_100g=44, protein=0.9, carbs=9.0, fat=0.1, category="Фрукты"),
+            Product(name="Киви", calories_per_100g=47, protein=1.0, carbs=10.3, fat=0.5, category="Фрукты"),
+            Product(name="Ананас", calories_per_100g=52, protein=0.4, carbs=11.8, fat=0.1, category="Фрукты"),
+            Product(name="Манго", calories_per_100g=67, protein=0.6, carbs=15.0, fat=0.4, category="Фрукты"),
+            Product(name="Смородина черная", calories_per_100g=44, protein=1.0, carbs=7.3, fat=0.4, category="Ягоды"),
+            Product(name="Смородина красная", calories_per_100g=43, protein=0.6, carbs=7.7, fat=0.2, category="Ягоды"),
+            Product(name="Крыжовник", calories_per_100g=45, protein=0.7, carbs=9.1, fat=0.2, category="Ягоды"),
+            Product(name="Брусника", calories_per_100g=43, protein=0.7, carbs=8.2, fat=0.5, category="Ягоды"),
+            Product(name="Клюква", calories_per_100g=28, protein=0.5, carbs=6.8, fat=0.2, category="Ягоды"),
+            
+            # Дополнительные орехи и семечки
+            Product(name="Фундук", calories_per_100g=704, protein=16.1, carbs=9.9, fat=66.9, category="Орехи и семечки"),
+            Product(name="Арахис", calories_per_100g=548, protein=26.3, carbs=9.9, fat=45.2, category="Орехи и семечки"),
+            Product(name="Кешью", calories_per_100g=553, protein=25.7, carbs=13.2, fat=42.2, category="Орехи и семечки"),
+            Product(name="Фисташки", calories_per_100g=556, protein=20.0, carbs=7.0, fat=50.0, category="Орехи и семечки"),
+            Product(name="Семечки подсолнуха", calories_per_100g=601, protein=20.7, carbs=10.5, fat=52.9, category="Орехи и семечки"),
+            Product(name="Семечки тыквы", calories_per_100g=559, protein=24.5, carbs=4.7, fat=49.1, category="Орехи и семечки"),
+            
+            # Дополнительные молочные продукты
+            Product(name="Молоко 1.5%", calories_per_100g=44, protein=2.8, carbs=4.7, fat=1.5, category="Молочные продукты"),
+            Product(name="Кефир 1%", calories_per_100g=40, protein=2.8, carbs=4.0, fat=1.0, category="Молочные продукты"),
+            Product(name="Сметана 15%", calories_per_100g=158, protein=2.6, carbs=3.0, fat=15.0, category="Молочные продукты"),
+            Product(name="Сыр голландский", calories_per_100g=377, protein=26.0, carbs=0.0, fat=31.0, category="Молочные продукты"),
+            Product(name="Брынза", calories_per_100g=260, protein=17.9, carbs=0.0, fat=20.1, category="Молочные продукты"),
+            Product(name="Простокваша", calories_per_100g=53, protein=2.9, carbs=4.1, fat=2.5, category="Молочные продукты"),
+            
+            # Дополнительные крупы и злаки
+            Product(name="Рис бурый", calories_per_100g=337, protein=6.3, carbs=65.1, fat=4.4, category="Крупы"),
+            Product(name="Перловка", calories_per_100g=315, protein=9.3, carbs=73.7, fat=1.1, category="Крупы"),
+            Product(name="Манка", calories_per_100g=328, protein=10.3, carbs=70.6, fat=1.0, category="Крупы"),
+            Product(name="Кукурузная крупа", calories_per_100g=328, protein=8.3, carbs=71.0, fat=1.2, category="Крупы"),
+            Product(name="Булгур", calories_per_100g=342, protein=12.3, carbs=57.6, fat=1.3, category="Крупы"),
+            
+            # Дополнительные масла
+            Product(name="Масло подсолнечное", calories_per_100g=899, protein=0.0, carbs=0.0, fat=99.9, category="Масла и жиры"),
+            Product(name="Маргарин", calories_per_100g=743, protein=0.5, carbs=1.0, fat=82.0, category="Масла и жиры"),
+            
+            # Дополнительные бобовые
+            Product(name="Фасоль белая", calories_per_100g=102, protein=7.0, carbs=16.9, fat=0.5, category="Бобовые"),
+            Product(name="Фасоль красная", calories_per_100g=93, protein=8.4, carbs=13.7, fat=0.3, category="Бобовые"),
+            Product(name="Горох", calories_per_100g=298, protein=20.5, carbs=53.3, fat=2.0, category="Бобовые"),
+            Product(name="Нут", calories_per_100g=364, protein=19.3, carbs=61.0, fat=6.0, category="Бобовые"),
+            
+            # Дополнительные напитки
+            Product(name="Чай черный", calories_per_100g=1, protein=0.0, carbs=0.3, fat=0.0, category="Напитки"),
+            Product(name="Сок апельсиновый", calories_per_100g=36, protein=0.7, carbs=8.1, fat=0.2, category="Напитки"),
+            Product(name="Сок яблочный", calories_per_100g=46, protein=0.1, carbs=11.3, fat=0.1, category="Напитки"),
+            Product(name="Компот", calories_per_100g=60, protein=0.2, carbs=15.0, fat=0.1, category="Напитки"),
+            
+            # Дополнительные сладости
+            Product(name="Сахар", calories_per_100g=387, protein=0.0, carbs=99.7, fat=0.0, category="Сладости"),
+            Product(name="Шоколад молочный", calories_per_100g=534, protein=7.6, carbs=60.2, fat=29.7, category="Сладости"),
+            Product(name="Печенье овсяное", calories_per_100g=437, protein=6.5, carbs=71.4, fat=14.1, category="Сладости"),
+            Product(name="Зефир", calories_per_100g=304, protein=0.8, carbs=79.8, fat=0.0, category="Сладости"),
+        ]
+        
+        # Добавляем мега-продукты
+        for product in mega_products:
+            db.session.add(product)
+        
+        db.session.commit()
+        
+        new_count = Product.query.count()
+        added_count = len(mega_products)
+        
+        flash(f'🎉 МЕГА успех! Добавлено {added_count} продуктов! Общее количество: {new_count}', 'success')
+        logging.info(f"Added {added_count} mega products, total: {new_count}")
+        
+        return redirect(url_for('products'))
+        
+    except Exception as e:
+        logging.error(f"Error loading mega products: {str(e)}")
+        flash(f'Ошибка при добавлении мега-продуктов: {str(e)}', 'error')
         return redirect(url_for('products'))
 
 @app.route('/init_db')
