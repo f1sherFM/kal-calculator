@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2>
+            <i class="fas fa-chart-bar"></i> Статистика питания
+        </h2>
+    </div>
+</div>
+
+<!-- Средние показатели за неделю -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card calorie-card h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title">
+                    <i class="fas fa-fire"></i> Среднее
+                </h5>
+                <h2 class="mb-1">{{ avg_calories }}</h2>
+                <small>ккал/день</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card protein-card h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title">
+                    <i class="fas fa-dumbbell"></i> Белки
+                </h5>
+                <h2 class="mb-1">{{ avg_protein }}</h2>
+                <small>г/день</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card carbs-card h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title">
+                    <i class="fas fa-bread-slice"></i> Углеводы
+                </h5>
+                <h2 class="mb-1">{{ avg_carbs }}</h2>
+                <small>г/день</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card fat-card h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title">
+                    <i class="fas fa-tint"></i> Жиры
+                </h5>
+                <h2 class="mb-1">{{ avg_fat }}</h2>
+                <small>г/день</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- График калорий за неделю -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-line"></i> Калории за последние 7 дней
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="caloriesChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Анализ питания -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-pie-chart"></i> Распределение БЖУ
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="macroChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-bullseye"></i> Анализ питания
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if avg_calories > 0 %}
+                    <div class="mb-3">
+                        <h6>Калорийность:</h6>
+                        {% if avg_calories < 1200 %}
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                Слишком низкая калорийность. Может быть опасно для здоровья.
+                            </div>
+                        {% elif avg_calories > 3000 %}
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i>
+                                Высокая калорийность. Проверьте, соответствует ли это вашим целям.
+                            </div>
+                        {% else %}
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle"></i>
+                                Калорийность в пределах нормы.
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6>Белки:</h6>
+                        {% if avg_protein < 0.8 * 70 %}  {# Примерно 0.8г на кг веса #}
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                Недостаток белка. Рекомендуется увеличить потребление.
+                            </div>
+                        {% else %}
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle"></i>
+                                Достаточное потребление белка.
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6>Рекомендации:</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-apple-alt text-success"></i> Добавьте больше овощей и фруктов</li>
+                            <li><i class="fas fa-fish text-info"></i> Включите источники омега-3</li>
+                            <li><i class="fas fa-tint text-primary"></i> Не забывайте пить воду</li>
+                            <li><i class="fas fa-clock text-warning"></i> Соблюдайте режим питания</li>
+                        </ul>
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-chart-pie fa-3x mb-3"></i>
+                        <h5>Недостаточно данных</h5>
+                        <p>Добавьте записи о питании для получения анализа.</p>
+                        <a href="{{ url_for('add_food') }}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Добавить еду
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Цели и достижения -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-trophy"></i> Цели и достижения
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <div class="text-center">
+                            <div class="bg-light p-3 rounded mb-2">
+                                <i class="fas fa-calendar-check fa-2x text-success"></i>
+                            </div>
+                            <h6>Постоянство</h6>
+                            <small class="text-muted">Ведите дневник каждый день</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="text-center">
+                            <div class="bg-light p-3 rounded mb-2">
+                                <i class="fas fa-balance-scale fa-2x text-primary"></i>
+                            </div>
+                            <h6>Баланс БЖУ</h6>
+                            <small class="text-muted">Следите за балансом питательных веществ</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="text-center">
+                            <div class="bg-light p-3 rounded mb-2">
+                                <i class="fas fa-bullseye fa-2x text-warning"></i>
+                            </div>
+                            <h6>Цель по калориям</h6>
+                            <small class="text-muted">Придерживайтесь дневной нормы</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// График калорий за неделю
+const dailyStatsData = {{ daily_stats | tojson | safe }};
+
+const caloriesCtx = document.getElementById('caloriesChart').getContext('2d');
+new Chart(caloriesCtx, {
+    type: 'line',
+    data: {
+        labels: dailyStatsData.map(day => day.date),
+        datasets: [{
+            label: 'Калории',
+            data: dailyStatsData.map(day => day.calories),
+            borderColor: 'rgb(54, 162, 235)',
+            backgroundColor: 'rgba(54, 162, 235, 0.1)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.3
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'Калории'
+                }
+            },
+            x: {
+                title: {
+                    display: true,
+                    text: 'Дата'
+                }
+            }
+        },
+        plugins: {
+            legend: {
+                display: false
+            }
+        }
+    }
+});
+
+// Круговая диаграмма БЖУ
+{% if avg_calories > 0 %}
+{% set protein_calories = avg_protein * 4 %}
+{% set fat_calories = avg_fat * 9 %}
+{% set carbs_calories = avg_carbs * 4 %}
+const macroCtx = document.getElementById('macroChart').getContext('2d');
+new Chart(macroCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Белки', 'Жиры', 'Углеводы'],
+        datasets: [{
+            data: [{{ protein_calories }}, {{ fat_calories }}, {{ carbs_calories }}],
+            backgroundColor: [
+                'rgba(255, 99, 132, 0.8)',
+                'rgba(255, 205, 86, 0.8)',
+                'rgba(54, 162, 235, 0.8)'
+            ],
+            borderColor: [
+                'rgba(255, 99, 132, 1)',
+                'rgba(255, 205, 86, 1)',
+                'rgba(54, 162, 235, 1)'
+            ],
+            borderWidth: 2
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        const label = context.label || '';
+                        const value = context.parsed;
+                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                        const percentage = Math.round((value / total) * 100);
+                        return `${label}: ${value.toFixed(0)} ккал (${percentage}%)`;
+                    }
+                }
+            }
+        }
+    }
+});
+{% endif %}
+</script>
+{% endblock %}

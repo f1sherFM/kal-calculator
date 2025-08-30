@@ -1,0 +1,378 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="text-center mb-4">
+            <i class="fas fa-calendar-day"></i> Дневник питания
+            <small class="text-muted d-block">{{ today.strftime('%d.%m.%Y') }}</small>
+        </h1>
+    </div>
+</div>
+
+<!-- Статистика за день -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card calorie-card h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title">
+                    <i class="fas fa-fire"></i> Калории
+                </h5>
+                <h2 class="mb-1">{{ "%.0f"|format(total_calories) }}</h2>
+                <small>из {{ target_calories }} ккал</small>
+                <div class="progress mt-2" style="height: 8px;">
+                    {% if target_calories > 0 %}
+                        {% set progress_width = [total_calories/target_calories*100, 100]|min %}
+                    {% else %}
+                        {% set progress_width = 0 %}
+                    {% endif %}
+                    <div class="progress-bar bg-light" data-width="{{ progress_width|round(1) }}"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card protein-card h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title">
+                    <i class="fas fa-dumbbell"></i> Белки
+                </h5>
+                <h2 class="mb-1">{{ "%.1f"|format(total_protein) }}</h2>
+                <small>грамм</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card carbs-card h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title">
+                    <i class="fas fa-bread-slice"></i> Углеводы
+                </h5>
+                <h2 class="mb-1">{{ "%.1f"|format(total_carbs) }}</h2>
+                <small>грамм</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card fat-card h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title">
+                    <i class="fas fa-tint"></i> Жиры
+                </h5>
+                <h2 class="mb-1">{{ "%.1f"|format(total_fat) }}</h2>
+                <small>грамм</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Быстрые действия -->
+<div class="row mb-4">
+    <div class="col-12 text-center">
+        <a href="{{ url_for('add_food') }}" class="btn btn-primary btn-lg me-3">
+            <i class="fas fa-plus"></i> Добавить еду
+        </a>
+        <a href="{{ url_for('add_product') }}" class="btn btn-outline-primary btn-lg me-3">
+            <i class="fas fa-plus-circle"></i> Добавить продукт
+        </a>
+        <a href="{{ url_for('products') }}" class="btn btn-outline-secondary btn-lg">
+            <i class="fas fa-list"></i> Все продукты
+        </a>
+    </div>
+</div>
+
+<!-- Быстрый доступ к популярным продуктам -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-star"></i> Быстрый доступ к популярным продуктам
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 col-sm-6 mb-2">
+                        <button class="btn btn-outline-info btn-sm w-100 quick-add-btn" 
+                                data-product="Куриная грудка" data-weight="100">
+                            🍗 Куриная грудка (100г)
+                        </button>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-2">
+                        <button class="btn btn-outline-info btn-sm w-100 quick-add-btn" 
+                                data-product="Рис отварной" data-weight="150">
+                            🍚 Рис отварной (150г)
+                        </button>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-2">
+                        <button class="btn btn-outline-info btn-sm w-100 quick-add-btn" 
+                                data-product="Яблоко" data-weight="150">
+                            🍎 Яблоко (150г)
+                        </button>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-2">
+                        <button class="btn btn-outline-info btn-sm w-100 quick-add-btn" 
+                                data-product="Молоко 3.2%" data-weight="200">
+                            🥛 Молоко (200мл)
+                        </button>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-2">
+                        <button class="btn btn-outline-info btn-sm w-100 quick-add-btn" 
+                                data-product="Творог 5%" data-weight="100">
+                            🧀 Творог (100г)
+                        </button>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-2">
+                        <button class="btn btn-outline-info btn-sm w-100 quick-add-btn" 
+                                data-product="Банан" data-weight="120">
+                            🍌 Банан (120г)
+                        </button>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-2">
+                        <button class="btn btn-outline-info btn-sm w-100 quick-add-btn" 
+                                data-product="Яйцо куриное" data-weight="60">
+                            🥚 Яйцо (60г)
+                        </button>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-2">
+                        <button class="btn btn-outline-info btn-sm w-100 quick-add-btn" 
+                                data-product="Хлеб черный" data-weight="30">
+                            🍞 Хлеб черный (30г)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Приемы пищи -->
+<div class="row">
+    {% set meal_icons = {
+        'завтрак': 'fas fa-sun',
+        'обед': 'fas fa-clock',
+        'ужин': 'fas fa-moon',
+        'перекус': 'fas fa-cookie-bite'
+    } %}
+    
+    {% for meal_type, entries in meals.items() %}
+    <div class="col-md-6 mb-4">
+        <div class="card meal-card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="{{ meal_icons[meal_type] }}"></i> 
+                    {{ meal_type.title() }}
+                    {% if entries %}
+                        <span class="badge bg-light text-dark ms-2">
+                            {{ "%.0f"|format(entries|sum(attribute='total_calories')) }} ккал
+                        </span>
+                    {% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if entries %}
+                    {% for entry in entries %}
+                    <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                        <div>
+                            <strong>{{ entry.product.name }}</strong>
+                            <small class="text-muted d-block">
+                                {{ entry.weight }}г • 
+                                {{ "%.0f"|format(entry.total_calories) }} ккал •
+                                Б: {{ "%.1f"|format(entry.total_protein) }}г •
+                                Ж: {{ "%.1f"|format(entry.total_fat) }}г •
+                                У: {{ "%.1f"|format(entry.total_carbs) }}г
+                            </small>
+                        </div>
+                        <a href="{{ url_for('delete_entry', entry_id=entry.id) }}" 
+                           class="btn btn-outline-danger btn-sm"
+                           onclick="return confirm('Удалить запись?')">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted text-center py-3">
+                        <i class="fas fa-utensils fa-2x d-block mb-2"></i>
+                        Пока ничего не добавлено
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Прогресс по калориям -->
+{% if total_calories > 0 %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title text-center">Прогресс по калориям</h5>
+                <div class="progress" style="height: 30px;">
+                    {% if target_calories > 0 %}
+                    {% set progress_percent = [total_calories/target_calories*100, 100]|min %}
+                    {% else %}
+                    {% set progress_percent = 0 %}
+                    {% endif %}
+                    <div class="progress-bar {% if progress_percent > 100 %}bg-danger{% elif progress_percent > 85 %}bg-warning{% else %}bg-success{% endif %}" 
+                         data-width="{{ progress_percent|round(1) }}">
+                        {{ "%.0f"|format(progress_percent) }}%
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between mt-2">
+                    <small class="text-muted">0 ккал</small>
+                    <small class="text-muted">{{ target_calories }} ккал</small>
+                </div>
+                {% if total_calories > target_calories %}
+                    <div class="alert alert-warning mt-3">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Вы превысили дневную норму на {{ "%.0f"|format(total_calories - target_calories) }} ккал
+                    </div>
+                {% elif total_calories < target_calories * 0.8 %}
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-info-circle"></i>
+                        До нормы осталось {{ "%.0f"|format(target_calories - total_calories) }} ккал
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Устанавливаем ширину прогресс-баров из data-width атрибутов
+    const progressBars = document.querySelectorAll('.progress-bar[data-width]');
+    progressBars.forEach(bar => {
+        const width = bar.getAttribute('data-width');
+        bar.style.width = width + '%';
+    });
+    
+    // Обработчики для кнопок быстрого доступа
+    const quickAddButtons = document.querySelectorAll('.quick-add-btn');
+    
+    quickAddButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const productName = this.dataset.product;
+            const weight = this.dataset.weight;
+            
+            // Показываем модальное окно для выбора приема пищи
+            showMealTypeModal(productName, weight);
+        });
+    });
+});
+
+function showMealTypeModal(productName, weight) {
+    const modalHtml = `
+        <div class="modal fade" id="quickAddModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Добавить ${productName}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Вес: <strong>${weight}г</strong></p>
+                        <div class="mb-3">
+                            <label class="form-label">Выберите прием пищи:</label>
+                            <select class="form-control" id="quick-meal-type">
+                                <option value="завтрак">🌅 Завтрак</option>
+                                <option value="обед">🌞 Обед</option>
+                                <option value="ужин">🌙 Ужин</option>
+                                <option value="перекус">🍪 Перекус</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                        <button type="button" class="btn btn-primary" onclick="quickAddProduct('${productName}', ${weight})">
+                            Добавить
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Удаляем старое модальное окно если есть
+    const existingModal = document.getElementById('quickAddModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Добавляем новое модальное окно
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    // Показываем модальное окно
+    const modal = new bootstrap.Modal(document.getElementById('quickAddModal'));
+    modal.show();
+}
+
+function quickAddProduct(productName, weight) {
+    const mealType = document.getElementById('quick-meal-type').value;
+    const today = new Date().toISOString().split('T')[0];
+    
+    // Отправляем POST запрос для добавления продукта
+    fetch('/api/quick_add_food', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            product_name: productName,
+            weight: weight,
+            meal_type: mealType,
+            date: today
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Закрываем модальное окно
+            bootstrap.Modal.getInstance(document.getElementById('quickAddModal')).hide();
+            
+            // Показываем уведомление
+            showNotification('Продукт успешно добавлен!', 'success');
+            
+            // Перезагружаем страницу через 1 секунду
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            showNotification('Ошибка: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Ошибка:', error);
+        showNotification('Произошла ошибка при добавлении продукта', 'error');
+    });
+}
+
+function showNotification(message, type) {
+    const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+    const notification = `
+        <div class="alert ${alertClass} alert-dismissible fade show position-fixed" 
+             style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', notification);
+    
+    // Автоматически скрываем через 3 секунды
+    setTimeout(() => {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+            if (alert.textContent.includes(message)) {
+                alert.remove();
+            }
+        });
+    }, 3000);
+}
+</script>
+{% endblock %}

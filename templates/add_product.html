@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-plus-circle"></i> Добавить новый продукт
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Название продукта *</label>
+                        <input type="text" class="form-control" name="name" id="name" required
+                               placeholder="Например: Яблоко зеленое">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="category" class="form-label">Категория *</label>
+                        <select class="form-control" name="category" id="category" required>
+                            <option value="">Выберите категорию</option>
+                            <option value="Хлеб и выпечка">Хлеб и выпечка</option>
+                            <option value="Крупы и злаки">Крупы и злаки</option>
+                            <option value="Мясо и птица">Мясо и птица</option>
+                            <option value="Рыба и морепродукты">Рыба и морепродукты</option>
+                            <option value="Молочные продукты">Молочные продукты</option>
+                            <option value="Овощи">Овощи</option>
+                            <option value="Фрукты и ягоды">Фрукты и ягоды</option>
+                            <option value="Орехи и семена">Орехи и семена</option>
+                            <option value="Бобовые">Бобовые</option>
+                            <option value="Масла и жиры">Масла и жиры</option>
+                            <option value="Сладости">Сладости</option>
+                            <option value="Напитки">Напитки</option>
+                            <option value="Готовые блюда">Готовые блюда</option>
+                            <option value="Прочее">Прочее</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="calories" class="form-label">Калории на 100г *</label>
+                        <input type="number" class="form-control" name="calories" id="calories" 
+                               step="0.1" min="0" required
+                               placeholder="Например: 47">
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="protein" class="form-label">Белки (г/100г)</label>
+                            <input type="number" class="form-control" name="protein" id="protein" 
+                                   step="0.1" min="0" value="0"
+                                   placeholder="Например: 0.4">
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label for="carbs" class="form-label">Углеводы (г/100г)</label>
+                            <input type="number" class="form-control" name="carbs" id="carbs" 
+                                   step="0.1" min="0" value="0"
+                                   placeholder="Например: 9.8">
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label for="fat" class="form-label">Жиры (г/100г)</label>
+                            <input type="number" class="form-control" name="fat" id="fat" 
+                                   step="0.1" min="0" value="0"
+                                   placeholder="Например: 0.4">
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Совет:</strong> Информацию о пищевой ценности можно найти на упаковке продукта 
+                        или в интернете. Обязательно укажите калории на 100 грамм продукта.
+                    </div>
+                    
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="fas fa-save"></i> Сохранить продукт
+                        </button>
+                        <a href="{{ url_for('products') }}" class="btn btn-secondary btn-lg">
+                            <i class="fas fa-arrow-left"></i> К списку продуктов
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Подсказки по добавлению продуктов -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-lightbulb"></i> Полезные советы
+                </h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success"></i>
+                        Используйте точные названия продуктов для удобного поиска
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success"></i>
+                        Указывайте пищевую ценность именно на 100 грамм продукта
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success"></i>
+                        Для готовых блюд учитывайте способ приготовления
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success"></i>
+                        Проверяйте данные на упаковке или в надежных источниках
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Автоматический расчет итоговых калорий на основе БЖУ
+    const proteinInput = document.getElementById('protein');
+    const carbsInput = document.getElementById('carbs');
+    const fatInput = document.getElementById('fat');
+    const caloriesInput = document.getElementById('calories');
+    
+    function calculateCalories() {
+        const protein = parseFloat(proteinInput.value) || 0;
+        const carbs = parseFloat(carbsInput.value) || 0;
+        const fat = parseFloat(fatInput.value) || 0;
+        
+        // 1г белка = 4 ккал, 1г углеводов = 4 ккал, 1г жиров = 9 ккал
+        const calculatedCalories = (protein * 4) + (carbs * 4) + (fat * 9);
+        
+        if (calculatedCalories > 0) {
+            caloriesInput.value = calculatedCalories.toFixed(1);
+        }
+    }
+    
+    proteinInput.addEventListener('input', calculateCalories);
+    carbsInput.addEventListener('input', calculateCalories);
+    fatInput.addEventListener('input', calculateCalories);
+});
+</script>
+{% endblock %}

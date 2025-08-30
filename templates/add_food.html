@@ -1,0 +1,335 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">
+                    <i class="fas fa-plus"></i> Добавить еду в дневник
+                </h4>
+                <button type="button" class="btn btn-light btn-sm" onclick="addProductRow()">
+                    <i class="fas fa-plus"></i> Еще продукт
+                </button>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="add-food-form">
+                    <!-- Общие параметры -->
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3">
+                            <label for="meal_type" class="form-label">Прием пищи *</label>
+                            <select class="form-control" name="meal_type" required>
+                                <option value="">Выберите прием пищи</option>
+                                <option value="завтрак">🌅 Завтрак</option>
+                                <option value="обед">🌞 Обед</option>
+                                <option value="ужин">🌙 Ужин</option>
+                                <option value="перекус">🍪 Перекус</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="date" class="form-label">Дата *</label>
+                            <input type="date" class="form-control" name="date" 
+                                   value="{{ today }}" required>
+                        </div>
+                    </div>
+                    
+                    <!-- Продукты -->
+                    <div class="card mb-3">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0"><i class="fas fa-utensils"></i> Продукты</h6>
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="addProductRow()">
+                                <i class="fas fa-plus"></i> Добавить продукт
+                            </button>
+                        </div>
+                        <div class="card-body" id="products-container">
+                            <!-- Первый продукт -->
+                            <div class="product-row mb-3" data-index="0">
+                                <div class="row">
+                                    <div class="col-md-6 mb-2">
+                                        <label class="form-label">Продукт *</label>
+                                        <select class="form-control product-select" name="product_id[]" required>
+                                            <option value="">Выберите продукт</option>
+                                            {% for product in products %}
+                                            <option value="{{ product.id }}" 
+                                                    data-calories="{{ product.calories_per_100g }}"
+                                                    data-protein="{{ product.protein }}"
+                                                    data-fat="{{ product.fat }}"
+                                                    data-carbs="{{ product.carbs }}"
+                                                    data-category="{{ product.category }}"
+                                                    {% if selected_product_id == product.id %}selected{% endif %}>
+                                                {{ product.name }} ({{ product.category }})
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="col-md-4 mb-2">
+                                        <label class="form-label">Вес (грамм) *</label>
+                                        <input type="number" class="form-control weight-input" name="weight[]" 
+                                               step="0.1" min="0.1" required>
+                                    </div>
+                                    
+                                    <div class="col-md-2 mb-2 d-flex align-items-end">
+                                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeProductRow(this)" style="display: none;">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Предварительный расчет для этого продукта -->
+                                <div class="nutrition-preview" style="display: none;">
+                                    <div class="alert alert-light">
+                                        <small>
+                                            <strong class="calories">0</strong> ккал, 
+                                            <span class="protein">0</span>г белков, 
+                                            <span class="fat">0</span>г жиров, 
+                                            <span class="carbs">0</span>г углеводов
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    
+                    <!-- Общий расчет -->
+                    <div class="card bg-success text-white mb-3" id="total-nutrition" style="display: none;">
+                        <div class="card-body">
+                            <h6 class="card-title"><i class="fas fa-calculator"></i> Общая пищевая ценность:</h6>
+                            <div class="row text-center">
+                                <div class="col-3">
+                                    <strong id="total-calories">0</strong>
+                                    <br><small>ккал</small>
+                                </div>
+                                <div class="col-3">
+                                    <strong id="total-protein">0</strong>
+                                    <br><small>белки</small>
+                                </div>
+                                <div class="col-3">
+                                    <strong id="total-fat">0</strong>
+                                    <br><small>жиры</small>
+                                </div>
+                                <div class="col-3">
+                                    <strong id="total-carbs">0</strong>
+                                    <br><small>углеводы</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-success btn-lg" id="submit-btn" disabled>
+                            <i class="fas fa-plus"></i> Добавить <span id="product-count">0</span> продуктов в дневник
+                        </button>
+                        <a href="{{ url_for('index') }}" class="btn btn-secondary btn-lg">
+                            <i class="fas fa-arrow-left"></i> Отмена
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Поиск продуктов (автодополнение) -->
+<div class="modal fade" id="productSearchModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Поиск продуктов</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="text" class="form-control mb-3" id="product-search" 
+                       placeholder="Введите название продукта...">
+                <div id="search-results"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let productRowIndex = 1;
+
+document.addEventListener('DOMContentLoaded', function() {
+    updateTotalNutrition();
+    updateSubmitButton();
+    
+    // Добавляем обработчики для первого продукта
+    attachProductRowHandlers(document.querySelector('.product-row'));
+    
+    // Добавляем глобальные обработчики для отслеживания изменений
+    document.addEventListener('change', function(e) {
+        if (e.target.matches('.product-select') || e.target.matches('.weight-input')) {
+            updateSubmitButton();
+        }
+    });
+    
+    document.addEventListener('input', function(e) {
+        if (e.target.matches('.weight-input')) {
+            updateSubmitButton();
+        }
+    });
+});
+
+function addProductRow() {
+    const container = document.getElementById('products-container');
+    const newRow = document.createElement('div');
+    newRow.className = 'product-row mb-3';
+    newRow.setAttribute('data-index', productRowIndex);
+    
+    // Клонируем первую строку продукта и очищаем значения
+    const firstRow = document.querySelector('.product-row');
+    const clonedRow = firstRow.cloneNode(true);
+    
+    // Очищаем значения в клонированной строке
+    const productSelect = clonedRow.querySelector('.product-select');
+    const weightInput = clonedRow.querySelector('.weight-input');
+    const nutritionPreview = clonedRow.querySelector('.nutrition-preview');
+    
+    productSelect.selectedIndex = 0; // Сбрасываем на "Выберите продукт"
+    weightInput.value = '';
+    nutritionPreview.style.display = 'none';
+    
+    // Показываем кнопку удаления
+    const deleteBtn = clonedRow.querySelector('.btn-outline-danger');
+    deleteBtn.style.display = 'block';
+    
+    // Обновляем индекс
+    clonedRow.setAttribute('data-index', productRowIndex);
+    
+    container.appendChild(clonedRow);
+    attachProductRowHandlers(clonedRow);
+    
+    productRowIndex++;
+    updateSubmitButton();
+    
+    // Показываем кнопки удаления если больше одного продукта
+    updateDeleteButtons();
+}
+
+function removeProductRow(button) {
+    const row = button.closest('.product-row');
+    row.remove();
+    updateTotalNutrition();
+    updateSubmitButton();
+    updateDeleteButtons();
+}
+
+function updateDeleteButtons() {
+    const rows = document.querySelectorAll('.product-row');
+    const deleteButtons = document.querySelectorAll('.product-row .btn-outline-danger');
+    
+    deleteButtons.forEach(btn => {
+        btn.style.display = rows.length > 1 ? 'block' : 'none';
+    });
+}
+
+function attachProductRowHandlers(row) {
+    const productSelect = row.querySelector('.product-select');
+    const weightInput = row.querySelector('.weight-input');
+    const nutritionPreview = row.querySelector('.nutrition-preview');
+    
+    function updateRowNutrition() {
+        const selectedOption = productSelect.options[productSelect.selectedIndex];
+        const weight = parseFloat(weightInput.value) || 0;
+        
+        if (selectedOption.value && weight > 0) {
+            const calories = parseFloat(selectedOption.dataset.calories) || 0;
+            const protein = parseFloat(selectedOption.dataset.protein) || 0;
+            const fat = parseFloat(selectedOption.dataset.fat) || 0;
+            const carbs = parseFloat(selectedOption.dataset.carbs) || 0;
+            
+            const factor = weight / 100;
+            
+            nutritionPreview.querySelector('.calories').textContent = Math.round(calories * factor);
+            nutritionPreview.querySelector('.protein').textContent = (protein * factor).toFixed(1);
+            nutritionPreview.querySelector('.fat').textContent = (fat * factor).toFixed(1);
+            nutritionPreview.querySelector('.carbs').textContent = (carbs * factor).toFixed(1);
+            
+            nutritionPreview.style.display = 'block';
+        } else {
+            nutritionPreview.style.display = 'none';
+        }
+        
+        updateTotalNutrition();
+        updateSubmitButton();
+    }
+    
+    productSelect.addEventListener('change', updateRowNutrition);
+    weightInput.addEventListener('input', updateRowNutrition);
+}
+
+function updateTotalNutrition() {
+    let totalCalories = 0;
+    let totalProtein = 0;
+    let totalFat = 0;
+    let totalCarbs = 0;
+    
+    document.querySelectorAll('.product-row').forEach(row => {
+        const productSelect = row.querySelector('.product-select');
+        const weightInput = row.querySelector('.weight-input');
+        const selectedOption = productSelect.options[productSelect.selectedIndex];
+        const weight = parseFloat(weightInput.value) || 0;
+        
+        if (selectedOption.value && weight > 0) {
+            const calories = parseFloat(selectedOption.dataset.calories) || 0;
+            const protein = parseFloat(selectedOption.dataset.protein) || 0;
+            const fat = parseFloat(selectedOption.dataset.fat) || 0;
+            const carbs = parseFloat(selectedOption.dataset.carbs) || 0;
+            
+            const factor = weight / 100;
+            
+            totalCalories += calories * factor;
+            totalProtein += protein * factor;
+            totalFat += fat * factor;
+            totalCarbs += carbs * factor;
+        }
+    });
+    
+    const totalNutrition = document.getElementById('total-nutrition');
+    
+    if (totalCalories > 0) {
+        document.getElementById('total-calories').textContent = Math.round(totalCalories);
+        document.getElementById('total-protein').textContent = totalProtein.toFixed(1);
+        document.getElementById('total-fat').textContent = totalFat.toFixed(1);
+        document.getElementById('total-carbs').textContent = totalCarbs.toFixed(1);
+        
+        totalNutrition.style.display = 'block';
+    } else {
+        totalNutrition.style.display = 'none';
+    }
+}
+
+function updateSubmitButton() {
+    const rows = document.querySelectorAll('.product-row');
+    let validProducts = 0;
+    
+    rows.forEach(row => {
+        const productSelect = row.querySelector('.product-select');
+        const weightInput = row.querySelector('.weight-input');
+        
+        if (productSelect.value && weightInput.value && parseFloat(weightInput.value) > 0) {
+            validProducts++;
+        }
+    });
+    
+    const submitBtn = document.getElementById('submit-btn');
+    
+    submitBtn.disabled = validProducts === 0;
+    
+    if (validProducts === 0) {
+        submitBtn.innerHTML = '<i class="fas fa-plus"></i> Добавить 0 продуктов в дневник';
+    } else if (validProducts === 1) {
+        submitBtn.innerHTML = '<i class="fas fa-plus"></i> Добавить 1 продукт в дневник';
+    } else {
+        submitBtn.innerHTML = `<i class="fas fa-plus"></i> Добавить ${validProducts} продуктов в дневник`;
+    }
+    
+    console.log('Valid products count:', validProducts); // Для отладки
+}
+</script>
+{% endblock %}
