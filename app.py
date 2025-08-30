@@ -585,9 +585,9 @@ def add_all_products():
         ('Ряженка', 54, 2.9, 4.2, 2.5, 'Молочные продукты'),
         
         # Яйца
-        ('Яйцо куриное', 155, 12.7, 0.7, 10.9, 'Молочные продукты'),
-        ('Белок яичный', 44, 11.1, 0, 0, 'Молочные продукты'),
-        ('Желток яичный', 352, 16.2, 1.0, 31.2, 'Молочные продукты'),
+        ('Яйцо куриное', 155, 12.7, 0.7, 10.9, 'Мясо и птица'),
+        ('Белок яичный', 44, 11.1, 0, 0, 'Мясо и птица'),
+        ('Желток яичный', 352, 16.2, 1.0, 31.2, 'Мясо и птица'),
         
         # Овощи
         ('Картофель отварной', 82, 2.0, 16.3, 0.4, 'Овощи'),
@@ -994,6 +994,39 @@ def initialize_database():
         flash(f'Ошибка инициализации базы данных: {str(e)}', 'error')
         return redirect(url_for('index'))
 
+@app.route('/migrate_categories')
+def migrate_categories():
+    """Миграция категорий: объединяем мясо и яйца в 'Мясо и птица'"""
+    try:
+        # Обновляем продукты с категорией 'Мясо и яйца'
+        products_meat_eggs = Product.query.filter_by(category='Мясо и яйца').all()
+        for product in products_meat_eggs:
+            product.category = 'Мясо и птица'
+        
+        # Обновляем яйца из 'Молочные продукты'
+        all_dairy_products = Product.query.filter_by(category='Молочные продукты').all()
+        egg_products = [p for p in all_dairy_products if 'яйц' in p.name.lower()]
+        for product in egg_products:
+            product.category = 'Мясо и птица'
+        
+        # Обновляем продукты с категорией 'Яйца'
+        egg_category_products = Product.query.filter_by(category='Яйца').all()
+        for product in egg_category_products:
+            product.category = 'Мясо и птица'
+        
+        db.session.commit()
+        
+        total_updated = len(products_meat_eggs) + len(egg_products) + len(egg_category_products)
+        
+        logging.info(f"Миграция категорий успешно завершена. Обновлено: {total_updated} продуктов")
+        flash(f'Миграция успешно завершена! Обновлено {total_updated} продуктов в категории "Мясо и птица".', 'success')
+        return redirect(url_for('products'))
+        
+    except Exception as e:
+        logging.error(f"Ошибка при миграции категорий: {str(e)}")
+        flash(f'Ошибка при миграции категорий: {str(e)}', 'danger')
+        return redirect(url_for('products'))
+
 @app.route('/migrate_db')
 def migrate_db():
     """Добавляет столбец category в существующую таблицу products"""
@@ -1030,9 +1063,9 @@ def create_tables():
                 default_products = [
                     Product(name="Хлеб белый", calories_per_100g=265, protein=8.1, carbs=48.8, fat=3.2, category="Хлебобулочные"),
                     Product(name="Молоко 3.2%", calories_per_100g=60, protein=2.9, carbs=4.7, fat=3.2, category="Молочные"),
-                    Product(name="Яйцо куриное", calories_per_100g=155, protein=12.7, carbs=0.7, fat=10.9, category="Мясо и яйца"),
+                    Product(name="Яйцо куриное", calories_per_100g=155, protein=12.7, carbs=0.7, fat=10.9, category="Мясо и птица"),
                     Product(name="Рис белый", calories_per_100g=365, protein=7.5, carbs=78.9, fat=0.7, category="Крупы"),
-                    Product(name="Курица грудка", calories_per_100g=165, protein=31.0, carbs=0.0, fat=3.6, category="Мясо и яйца"),
+                    Product(name="Курица грудка", calories_per_100g=165, protein=31.0, carbs=0.0, fat=3.6, category="Мясо и птица"),
                     Product(name="Яблоко", calories_per_100g=47, protein=0.4, carbs=9.8, fat=0.4, category="Фрукты"),
                     Product(name="Банан", calories_per_100g=96, protein=1.5, carbs=21.0, fat=0.2, category="Фрукты"),
                     Product(name="Картофель", calories_per_100g=80, protein=2.0, carbs=16.3, fat=0.4, category="Овощи")

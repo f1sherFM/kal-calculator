@@ -27,10 +27,10 @@ def add_more_products():
             Product(name="Мидии", calories_per_100g=77, protein=11.5, carbs=3.3, fat=2.0, category="Рыба и морепродукты"),
             Product(name="Краб", calories_per_100g=85, protein=16.0, carbs=0.0, fat=3.6, category="Рыба и морепродукты"),
 
-            # Яйца
-            Product(name="Яйцо перепелиное", calories_per_100g=168, protein=11.9, carbs=0.6, fat=13.1, category="Яйца"),
-            Product(name="Белок яичный", calories_per_100g=44, protein=11.1, carbs=0.0, fat=0.0, category="Яйца"),
-            Product(name="Желток яичный", calories_per_100g=352, protein=16.2, carbs=1.0, fat=31.2, category="Яйца"),
+            # Яйца (теперь в категории "Мясо и птица")
+            Product(name="Яйцо перепелиное", calories_per_100g=168, protein=11.9, carbs=0.6, fat=13.1, category="Мясо и птица"),
+            Product(name="Белок яичный", calories_per_100g=44, protein=11.1, carbs=0.0, fat=0.0, category="Мясо и птица"),
+            Product(name="Желток яичный", calories_per_100g=352, protein=16.2, carbs=1.0, fat=31.2, category="Мясо и птица"),
 
             # Крупы и каши
             Product(name="Рис бурый", calories_per_100g=337, protein=6.3, carbs=65.1, fat=4.4, category="Крупы"),
