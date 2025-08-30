@@ -41,12 +41,23 @@ def init_database():
     """Initialize database tables and default data"""
     try:
         with app.app_context():
+            logging.info("Starting database initialization...")
+            
             # Создаем все таблицы
             db.create_all()
             logging.info("Database tables created successfully")
             
+            # Проверяем, что таблицы действительно созданы
+            from sqlalchemy import text
+            result = db.session.execute(text(
+                "SELECT table_name FROM information_schema.tables WHERE table_schema='public'"
+            ))
+            tables = [row[0] for row in result]
+            logging.info(f"Created tables: {tables}")
+            
             # Добавляем базовые продукты если их нет
             if Product.query.count() == 0:
+                logging.info("Adding default products...")
                 default_products = [
                     Product(name="Хлеб белый", calories_per_100g=265, protein=8.1, carbs=48.8, fat=3.2, category="Хлебобулочные"),
                     Product(name="Молоко 3.2%", calories_per_100g=60, protein=2.9, carbs=4.7, fat=3.2, category="Молочные"),
@@ -70,8 +81,29 @@ def init_database():
         logging.error(f"Error initializing database: {str(e)}")
         # Не поднимаем исключение, чтобы приложение продолжило работать
 
+# Добавляем функцию для ленивой инициализации
+def ensure_tables_exist():
+    """Ensure database tables exist, create them if they don't"""
+    try:
+        # Проверяем существование таблицы food_entries
+        from sqlalchemy import text
+        result = db.session.execute(text(
+            "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'food_entries')"
+        ))
+        table_exists = result.scalar()
+        
+        if not table_exists:
+            logging.warning("Tables don't exist, creating them now...")
+            init_database()
+            return True
+        return False
+    except Exception as e:
+        logging.error(f"Error checking table existence: {str(e)}")
+        return False
+
 # Инициализируем базу данных при загрузке модуля
 try:
+    logging.info("Attempting initial database setup...")
     init_database()
 except Exception as e:
     logging.error(f"Failed to initialize database on startup: {str(e)}")
@@ -169,6 +201,9 @@ class UserProfile(db.Model):
 @app.route('/')
 def index():
     try:
+        # Проверяем существование таблиц перед обращением к ним
+        ensure_tables_exist()
+        
         today = dt.date.today()
         
         # Получаем записи за сегодня
@@ -684,6 +719,19 @@ def quick_add_food():
     except Exception as e:
         logging.error(f"Ошибка при быстром добавлении продукта: {str(e)}")
         return jsonify({'success': False, 'message': 'Произошла ошибка при добавлении'})
+
+@app.route('/init_db')
+def initialize_database():
+    """Принудительная инициализация базы данных"""
+    try:
+        logging.info("Manual database initialization requested")
+        init_database()
+        flash('База данных успешно инициализирована!', 'success')
+        return redirect(url_for('index'))
+    except Exception as e:
+        logging.error(f"Manual database initialization failed: {str(e)}")
+        flash(f'Ошибка инициализации базы данных: {str(e)}', 'error')
+        return redirect(url_for('index'))
 
 @app.route('/migrate_db')
 def migrate_db():
