@@ -1,0 +1,389 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2>
+            <i class="fas fa-list"></i> База продуктов
+        </h2>
+    </div>
+</div>
+
+<!-- Фильтры по категориям -->
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-filter"></i> Фильтр по категориям</h6>
+            </div>
+            <div class="card-body py-2">
+                <div class="row">
+                    <div class="col-md-2 mb-2">
+                        <button class="btn btn-outline-primary w-100 btn-sm" onclick="filterByCategory('Мясо и птица')">
+                            <i class="fas fa-drumstick-bite"></i> Мясо и птица
+                        </button>
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <button class="btn btn-outline-success w-100 btn-sm" onclick="filterByCategory('Овощи')">
+                            <i class="fas fa-carrot"></i> Овощи
+                        </button>
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <button class="btn btn-outline-warning w-100 btn-sm" onclick="filterByCategory('Фрукты и ягоды')">
+                            <i class="fas fa-apple-alt"></i> Фрукты и ягоды
+                        </button>
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <button class="btn btn-outline-info w-100 btn-sm" onclick="filterByCategory('Молочные продукты')">
+                            <i class="fas fa-cheese"></i> Молочные продукты
+                        </button>
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <button class="btn btn-outline-secondary w-100 btn-sm" onclick="filterByCategory('Крупы и злаки')">
+                            <i class="fas fa-seedling"></i> Крупы и злаки
+                        </button>
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <button class="btn btn-outline-danger w-100 btn-sm" onclick="filterByCategory('Хлеб и выпечка')">
+                            <i class="fas fa-bread-slice"></i> Хлеб и выпечка
+                        </button>
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <button class="btn btn-outline-primary w-100 btn-sm" onclick="filterByCategory('Рыба и морепродукты')">
+                            <i class="fas fa-fish"></i> Рыба и морепродукты
+                        </button>
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <button class="btn btn-outline-warning w-100 btn-sm" onclick="filterByCategory('Орехи и семена')">
+                            <i class="fas fa-acorn"></i> Орехи и семена
+                        </button>
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <button class="btn btn-outline-success w-100 btn-sm" onclick="filterByCategory('Бобовые')">
+                            <i class="fas fa-leaf"></i> Бобовые
+                        </button>
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <button class="btn btn-outline-info w-100 btn-sm" onclick="filterByCategory('Масла и жиры')">
+                            <i class="fas fa-tint"></i> Масла и жиры
+                        </button>
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <button class="btn btn-outline-danger w-100 btn-sm" onclick="filterByCategory('Сладости')">
+                            <i class="fas fa-candy-cane"></i> Сладости
+                        </button>
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <button class="btn btn-outline-primary w-100 btn-sm" onclick="filterByCategory('Напитки')">
+                            <i class="fas fa-glass-whiskey"></i> Напитки
+                        </button>
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <button class="btn btn-outline-secondary w-100 btn-sm" onclick="filterByCategory('Готовые блюда')">
+                            <i class="fas fa-utensils"></i> Готовые блюда
+                        </button>
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <button class="btn btn-outline-warning w-100 btn-sm" onclick="filterByCategory('Прочее')">
+                            <i class="fas fa-question"></i> Прочее
+                        </button>
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <button class="btn btn-outline-dark w-100 btn-sm" onclick="clearFilters()">
+                            <i class="fas fa-times"></i> Все
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Поиск и добавление -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <form method="GET" class="d-flex">
+            <input type="text" class="form-control me-2" name="search" 
+                   value="{{ search }}" placeholder="Поиск продуктов...">
+            <input type="hidden" name="category" value="{{ category }}">
+            <button type="submit" class="btn btn-outline-primary">
+                <i class="fas fa-search"></i>
+            </button>
+        </form>
+    </div>
+    <div class="col-md-4 text-end">
+        <div class="btn-group" role="group">
+            <a href="{{ url_for('add_product') }}" class="btn btn-success">
+                <i class="fas fa-plus"></i> Добавить продукт
+            </a>
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                    <i class="fas fa-tools"></i> Управление
+                </button>
+                <ul class="dropdown-menu">
+                    <li>
+                        <a class="dropdown-item" href="{{ url_for('show_duplicates') }}">
+                            <i class="fas fa-search text-warning"></i> Показать дубликаты
+                            <span id="duplicate-badge" class="badge bg-danger ms-1" style="display: none;">0</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item text-danger" href="{{ url_for('cleanup_duplicates') }}" 
+                           onclick="return confirm('Удалить все дубликаты? Это действие необратимо!')">
+                            <i class="fas fa-trash-alt"></i> Очистить дубликаты
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Список продуктов -->
+<div class="card">
+    <div class="card-body">
+        {% if products.items %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Название</th>
+                            <th>Категория</th>
+                            <th>Калории/100г</th>
+                            <th>Белки</th>
+                            <th>Жиры</th>
+                            <th>Углеводы</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in products.items %}
+                        <tr class="product-row" 
+                            data-product-id="{{ product.id }}" 
+                            data-created="{{ product.created_at.strftime('%Y-%m-%d %H:%M:%S') if product.created_at else '' }}">
+                            <td>
+                                <strong>{{ product.name }}</strong>
+                                {% if product.created_at and (product.created_at.date() == today) %}
+                                    <span class="badge bg-success ms-2 new-product-badge">
+                                        <i class="fas fa-star"></i> Новый!
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary">{{ product.category or 'Прочее' }}</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-primary">{{ product.calories_per_100g }} ккал</span>
+                            </td>
+                            <td>{{ "%.1f"|format(product.protein) }}г</td>
+                            <td>{{ "%.1f"|format(product.fat) }}г</td>
+                            <td>{{ "%.1f"|format(product.carbs) }}г</td>
+                            <td>
+                                <a href="{{ url_for('add_food') }}?product={{ product.id }}" 
+                                   class="btn btn-sm btn-outline-primary" title="Добавить в дневник">
+                                    <i class="fas fa-plus"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Пагинация -->
+            {% if products.pages > 1 %}
+            <nav aria-label="Навигация по страницам">
+                <ul class="pagination justify-content-center">
+                    {% if products.has_prev %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('products', page=products.prev_num, search=search, category=category) }}">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for page_num in products.iter_pages() %}
+                        {% if page_num %}
+                            {% if page_num != products.page %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('products', page=page_num, search=search, category=category) }}">
+                                        {{ page_num }}
+                                    </a>
+                                </li>
+                            {% else %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ page_num }}</span>
+                                </li>
+                            {% endif %}
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if products.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('products', page=products.next_num, search=search, category=category) }}">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+            
+            <!-- Информация о количестве -->
+            <div class="text-center text-muted">
+                Показано {{ products.items|length }} из {{ products.total }} продуктов
+            </div>
+            
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                <h4 class="text-muted">
+                    {% if search %}
+                        Продукты не найдены
+                    {% else %}
+                        База продуктов пуста
+                    {% endif %}
+                </h4>
+                {% if search %}
+                    <p class="text-muted">
+                        По запросу "{{ search }}" ничего не найдено.<br>
+                        Попробуйте изменить поисковый запрос или 
+                        <a href="{{ url_for('add_product') }}">добавьте новый продукт</a>.
+                    </p>
+                    <a href="{{ url_for('products') }}" class="btn btn-primary">
+                        Показать все продукты
+                    </a>
+                {% else %}
+                    <p class="text-muted">
+                        Начните добавлять продукты в базу данных.
+                    </p>
+                    <a href="{{ url_for('add_product') }}" class="btn btn-success">
+                        <i class="fas fa-plus"></i> Добавить первый продукт
+                    </a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Активные фильтры -->
+{% if category or search %}
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="alert alert-info d-flex align-items-center justify-content-between">
+            <div>
+                <i class="fas fa-filter me-2"></i>
+                Активные фильтры:
+                {% if category %}
+                    <span class="badge bg-primary me-2">Категория: {{ category }}</span>
+                {% endif %}
+                {% if search %}
+                    <span class="badge bg-secondary me-2">Поиск: {{ search }}</span>
+                {% endif %}
+            </div>
+            <a href="{{ url_for('products') }}" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-times"></i> Сбросить
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+function filterByCategory(category) {
+    const url = new URL('/products', window.location.origin);
+    url.searchParams.set('category', category);
+    url.searchParams.set('_t', Date.now()); // Cache busting
+    window.location.href = url.toString();
+}
+
+function clearFilters() {
+    const url = new URL('/products', window.location.origin);
+    url.searchParams.set('_t', Date.now()); // Cache busting
+    window.location.href = url.toString();
+}
+
+// Обновление ссылок для cache-busting
+document.addEventListener('DOMContentLoaded', function() {
+    // Добавляем timestamp ко всем ссылкам
+    const links = document.querySelectorAll('a[href*="add_food"]');
+    links.forEach(link => {
+        const originalHref = link.getAttribute('href');
+        if (originalHref && !originalHref.includes('_t=')) {
+            const separator = originalHref.includes('?') ? '&' : '?';
+            link.setAttribute('href', originalHref + separator + '_t=' + Date.now());
+        }
+    });
+    
+    // Подсвечиваем новые продукты
+    const newProductBadges = document.querySelectorAll('.new-product-badge');
+    newProductBadges.forEach(badge => {
+        // Анимация появления
+        badge.style.animation = 'pulse 1.5s infinite';
+    });
+    
+    // Проверяем URL на наличие параметров поиска по новому продукту
+    const urlParams = new URLSearchParams(window.location.search);
+    const searchParam = urlParams.get('search');
+    if (searchParam) {
+        // Подсвечиваем найденные продукты
+        const productRows = document.querySelectorAll('.product-row');
+        productRows.forEach(row => {
+            const productName = row.querySelector('strong').textContent.toLowerCase();
+            if (productName.includes(searchParam.toLowerCase())) {
+                row.style.backgroundColor = '#fff3cd';
+                row.style.animation = 'highlight 2s ease-out';
+            }
+        });
+    }
+    
+    // Проверяем количество дубликатов
+    checkDuplicates();
+});
+
+// Добавляем CSS стили для анимаций
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+    
+    @keyframes highlight {
+        0% { background-color: #fff3cd; }
+        100% { background-color: transparent; }
+    }
+    
+    .new-product-badge {
+        animation: pulse 1.5s infinite;
+    }
+`;
+document.head.appendChild(style);
+
+// Функция для проверки дубликатов
+function checkDuplicates() {
+    fetch('/api/get_duplicate_count?' + new URLSearchParams({_t: Date.now()}))
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.total_duplicates > 0) {
+                const badge = document.getElementById('duplicate-badge');
+                if (badge) {
+                    badge.textContent = data.total_duplicates;
+                    badge.style.display = 'inline';
+                    badge.style.animation = 'pulse 1s infinite';
+                }
+            }
+        })
+        .catch(error => {
+            console.log('Ошибка проверки дубликатов:', error);
+        });
+}
+</script>
+{% endblock %}

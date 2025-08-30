@@ -1144,7 +1144,178 @@ def initialize_database():
         flash(f'Ошибка инициализации базы данных: {str(e)}', 'error')
         return redirect(url_for('index'))
 
-@app.route('/migrate_categories')
+@app.route('/cleanup_duplicates')
+def cleanup_duplicates():
+    """Очистка дубликатов продуктов в базе данных"""
+    try:
+        # Принудительное обновление сессии
+        db.session.expire_all()
+        
+        # Находим дубликаты по имени продукта
+        from sqlalchemy import func, text
+        
+        # Используем прямой SQL запрос для поиска дубликатов
+        duplicate_query = db.session.execute(text("""
+            SELECT name, COUNT(id) as count, MIN(id) as min_id
+            FROM products 
+            GROUP BY name 
+            HAVING COUNT(id) > 1
+        """))
+        
+        duplicates = duplicate_query.fetchall()
+        
+        if not duplicates:
+            flash('Дубликаты не найдены! База данных чистая.', 'info')
+            return redirect(url_for('products'))
+        
+        deleted_count = 0
+        kept_count = 0
+        
+        for duplicate in duplicates:
+            product_name = duplicate[0]  # name
+            count = duplicate[1]        # count
+            min_id = duplicate[2]       # min_id
+            
+            # Находим все продукты с одинаковым именем
+            same_name_products = Product.query.filter_by(name=product_name).order_by(Product.id).all()
+            
+            # Оставляем первый (самый старый) продукт, удаляем остальные
+            products_to_delete = same_name_products[1:]  # Все кроме первого
+            
+            logging.info(f"Найдено {count} дубликатов для '{product_name}', оставляем ID {min_id}, удаляем {len(products_to_delete)} дубликатов")
+            
+            for product_to_delete in products_to_delete:
+                # Проверяем, есть ли записи в дневнике, связанные с этим продуктом
+                food_entries = FoodEntry.query.filter_by(product_id=product_to_delete.id).all()
+                
+                if food_entries:
+                    # Перенаправляем записи на оригинальный продукт
+                    for entry in food_entries:
+                        entry.product_id = min_id
+                    logging.info(f"Перенаправлено {len(food_entries)} записей с продукта ID {product_to_delete.id} на ID {min_id}")
+                
+                # Удаляем дубликат
+                db.session.delete(product_to_delete)
+                deleted_count += 1
+            
+            kept_count += 1
+        
+        # Сохраняем изменения
+        db.session.commit()
+        
+        # Принудительное обновление сессии
+        db.session.expire_all()
+        
+        logging.info(f"Очистка дубликатов завершена. Удалено: {deleted_count} дубликатов, оставлено: {kept_count} уникальных продуктов")
+        
+        flash(f'✅ Очистка завершена! Удалено {deleted_count} дубликатов. Оставлено {kept_count} уникальных продуктов.', 'success')
+        
+        return redirect(url_for('products'))
+        
+    except Exception as e:
+        logging.error(f"Ошибка при очистке дубликатов: {str(e)}")
+        db.session.rollback()
+        flash(f'Ошибка при очистке дубликатов: {str(e)}', 'danger')
+        return redirect(url_for('products'))
+
+@app.route('/api/get_duplicate_count')
+def get_duplicate_count():
+    """Получить количество дубликатов в базе"""
+    try:
+        # Принудительное обновление сессии
+        db.session.expire_all()
+        
+        from sqlalchemy import text
+        
+        # Подсчитываем количество дубликатов
+        result = db.session.execute(text("""
+            SELECT COUNT(*) as duplicate_count
+            FROM (
+                SELECT name
+                FROM products 
+                GROUP BY name 
+                HAVING COUNT(id) > 1
+            ) as duplicates
+        """))
+        
+        duplicate_groups = result.scalar() or 0
+        
+        # Подсчитываем общее количество лишних продуктов
+        result2 = db.session.execute(text("""
+            SELECT SUM(count - 1) as total_duplicates
+            FROM (
+                SELECT COUNT(id) as count
+                FROM products 
+                GROUP BY name 
+                HAVING COUNT(id) > 1
+            ) as duplicates
+        """))
+        
+        total_duplicates = result2.scalar() or 0
+        
+        return jsonify({
+            'success': True,
+            'duplicate_groups': duplicate_groups,
+            'total_duplicates': total_duplicates,
+            'total_products': Product.query.count()
+        })
+        
+    except Exception as e:
+        logging.error(f"Ошибка получения статистики дубликатов: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/show_duplicates')
+def show_duplicates():
+    """Показать список дубликатов без удаления"""
+    try:
+        # Принудительное обновление сессии
+        db.session.expire_all()
+        
+        from sqlalchemy import func, text
+        
+        # Используем прямой SQL запрос для поиска дубликатов
+        duplicate_query = db.session.execute(text("""
+            SELECT name, COUNT(id) as count
+            FROM products 
+            GROUP BY name 
+            HAVING COUNT(id) > 1
+            ORDER BY name
+        """))
+        
+        duplicates = duplicate_query.fetchall()
+        
+        if not duplicates:
+            flash('Дубликаты не найдены! База данных чистая.', 'info')
+            return redirect(url_for('products'))
+        
+        # Получаем детальную информацию о каждом дубликате
+        duplicate_details = []
+        total_duplicates = 0
+        
+        for duplicate in duplicates:
+            product_name = duplicate[0]  # name
+            count = duplicate[1]        # count
+            
+            # Находим все продукты с одинаковым именем
+            same_name_products = Product.query.filter_by(name=product_name).order_by(Product.id).all()
+            
+            duplicate_details.append({
+                'name': product_name,
+                'count': count,
+                'products': same_name_products
+            })
+            
+            total_duplicates += (int(count) - 1)  # Исключаем оригинал
+        
+        flash(f'Найдено {len(duplicates)} групп дубликатов. Всего дубликатов для удаления: {total_duplicates}', 'warning')
+        
+        # Рендерим специальную страницу для показа дубликатов
+        return render_template('show_duplicates.html', duplicate_details=duplicate_details, total_duplicates=total_duplicates)
+        
+    except Exception as e:
+        logging.error(f"Ошибка при поиске дубликатов: {str(e)}")
+        flash(f'Ошибка при поиске дубликатов: {str(e)}', 'danger')
+        return redirect(url_for('products'))
 def migrate_categories():
     """Миграция категорий: объединяем мясо и яйца в 'Мясо и птица'"""
     try:
