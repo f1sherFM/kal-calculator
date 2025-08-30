@@ -776,21 +776,79 @@ def quick_add_food():
 
 @app.route('/load_all_products')
 def load_all_products():
-    """Загружает все дополнительные продукты в базу данных"""
+    """Загружает дополнительные продукты в базу данных"""
     try:
         current_count = Product.query.count()
         logging.info(f"Current product count: {current_count}")
         
         # Проверяем, не загружены ли уже дополнительные продукты
-        if current_count > 70:  # Если уже больше 70 продуктов
-            flash(f'Продукты уже загружены! Всего продуктов: {current_count}', 'info')
+        if current_count > 80:
+            flash(f'Продукты уже загружены! Всего: {current_count}', 'info')
             return redirect(url_for('products'))
         
-        # Добавляем дополнительные продукты порциями
-        exec(open('add_more_products.py').read())
+        # Дополнительные продукты
+        additional_products = [
+            # Рыба
+            Product(name="Судак", calories_per_100g=84, protein=19.0, carbs=0.0, fat=0.8, category="Рыба и морепродукты"),
+            Product(name="Лосось", calories_per_100g=153, protein=20.0, carbs=0.0, fat=8.1, category="Рыба и морепродукты"),
+            Product(name="Тунец", calories_per_100g=96, protein=23.0, carbs=0.0, fat=1.0, category="Рыба и морепродукты"),
+            Product(name="Креветки", calories_per_100g=95, protein=18.9, carbs=0.8, fat=2.2, category="Рыба и морепродукты"),
+            
+            # Овощи
+            Product(name="Морковь", calories_per_100g=35, protein=1.3, carbs=6.9, fat=0.1, category="Овощи"),
+            Product(name="Огурцы", calories_per_100g=15, protein=0.8, carbs=2.5, fat=0.1, category="Овощи"),
+            Product(name="Помидоры", calories_per_100g=20, protein=1.1, carbs=3.7, fat=0.2, category="Овощи"),
+            Product(name="Лук", calories_per_100g=47, protein=1.4, carbs=10.4, fat=0.0, category="Овощи"),
+            Product(name="Брокколи", calories_per_100g=28, protein=3.0, carbs=4.0, fat=0.4, category="Овощи"),
+            
+            # Фрукты
+            Product(name="Апельсин", calories_per_100g=36, protein=0.9, carbs=8.1, fat=0.2, category="Фрукты"),
+            Product(name="Груша", calories_per_100g=42, protein=0.4, carbs=10.9, fat=0.3, category="Фрукты"),
+            Product(name="Клубника", calories_per_100g=41, protein=0.8, carbs=7.7, fat=0.4, category="Фрукты"),
+            Product(name="Авокадо", calories_per_100g=208, protein=2.0, carbs=7.4, fat=19.5, category="Фрукты"),
+            
+            # Крупы
+            Product(name="Гречка", calories_per_100g=308, protein=12.6, carbs=57.1, fat=3.3, category="Крупы"),
+            Product(name="Овсянка", calories_per_100g=342, protein=12.3, carbs=59.5, fat=6.1, category="Крупы"),
+            Product(name="Пшено", calories_per_100g=348, protein=11.5, carbs=69.3, fat=3.3, category="Крупы"),
+            
+            # Орехи
+            Product(name="Грецкие орехи", calories_per_100g=656, protein=13.8, carbs=10.2, fat=60.8, category="Орехи и семечки"),
+            Product(name="Миндаль", calories_per_100g=645, protein=18.6, carbs=16.2, fat=53.7, category="Орехи и семечки"),
+            
+            # Масла
+            Product(name="Масло оливковое", calories_per_100g=898, protein=0.0, carbs=0.0, fat=99.8, category="Масла и жиры"),
+            Product(name="Масло сливочное", calories_per_100g=748, protein=0.5, carbs=0.8, fat=82.5, category="Масла и жиры"),
+            
+            # Бобовые
+            Product(name="Фасоль", calories_per_100g=102, protein=7.0, carbs=16.9, fat=0.5, category="Бобовые"),
+            Product(name="Чечевица", calories_per_100g=116, protein=9.0, carbs=16.9, fat=0.4, category="Бобовые"),
+            
+            # Ягоды
+            Product(name="Малина", calories_per_100g=46, protein=0.8, carbs=8.3, fat=0.7, category="Ягоды"),
+            Product(name="Черника", calories_per_100g=44, protein=1.1, carbs=7.6, fat=0.6, category="Ягоды"),
+            
+            # Макароны
+            Product(name="Макароны", calories_per_100g=337, protein=10.4, carbs=71.5, fat=1.1, category="Макаронные изделия"),
+            Product(name="Спагетти", calories_per_100g=344, protein=10.9, carbs=71.2, fat=1.4, category="Макаронные изделия"),
+            
+            # Напитки
+            Product(name="Минеральная вода", calories_per_100g=0, protein=0.0, carbs=0.0, fat=0.0, category="Напитки"),
+            Product(name="Кофе", calories_per_100g=2, protein=0.2, carbs=0.3, fat=0.0, category="Напитки"),
+            
+            # Сладости
+            Product(name="Мед", calories_per_100g=329, protein=0.8, carbs=80.3, fat=0.0, category="Сладости"),
+            Product(name="Шоколад темный", calories_per_100g=546, protein=6.2, carbs=52.6, fat=35.4, category="Сладости")
+        ]
+        
+        # Добавляем продукты
+        for product in additional_products:
+            db.session.add(product)
+        
+        db.session.commit()
         
         new_count = Product.query.count()
-        added_count = new_count - current_count
+        added_count = len(additional_products)
         
         flash(f'Успешно добавлено {added_count} продуктов! Общее количество: {new_count}', 'success')
         logging.info(f"Added {added_count} products, total: {new_count}")
@@ -799,7 +857,7 @@ def load_all_products():
         
     except Exception as e:
         logging.error(f"Error loading additional products: {str(e)}")
-        flash(f'Ошибка при загрузке продуктов: {str(e)}', 'error')
+        flash(f'Ошибка: {str(e)}', 'error')
         return redirect(url_for('products'))
 
 @app.route('/init_db')
