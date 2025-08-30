@@ -112,9 +112,30 @@
         </form>
     </div>
     <div class="col-md-4 text-end">
-        <a href="{{ url_for('add_product') }}" class="btn btn-success">
-            <i class="fas fa-plus"></i> Добавить продукт
-        </a>
+        <div class="btn-group" role="group">
+            <a href="{{ url_for('add_product') }}" class="btn btn-success">
+                <i class="fas fa-plus"></i> Добавить продукт
+            </a>
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                    <i class="fas fa-tools"></i> Управление
+                </button>
+                <ul class="dropdown-menu">
+                    <li>
+                        <a class="dropdown-item" href="{{ url_for('show_duplicates') }}">
+                            <i class="fas fa-search text-warning"></i> Показать дубликаты
+                            <span id="duplicate-badge" class="badge bg-danger ms-1" style="display: none;">0</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item text-danger" href="{{ url_for('cleanup_duplicates') }}" 
+                           onclick="return confirm('Удалить все дубликаты? Это действие необратимо!')">
+                            <i class="fas fa-trash-alt"></i> Очистить дубликаты
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -321,6 +342,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    
+    // Проверяем количество дубликатов
+    checkDuplicates();
 });
 
 // Добавляем CSS стили для анимаций
@@ -342,5 +366,24 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+// Функция для проверки дубликатов
+function checkDuplicates() {
+    fetch('/api/get_duplicate_count?' + new URLSearchParams({_t: Date.now()}))
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.total_duplicates > 0) {
+                const badge = document.getElementById('duplicate-badge');
+                if (badge) {
+                    badge.textContent = data.total_duplicates;
+                    badge.style.display = 'inline';
+                    badge.style.animation = 'pulse 1s infinite';
+                }
+            }
+        })
+        .catch(error => {
+            console.log('Ошибка проверки дубликатов:', error);
+        });
+}
 </script>
 {% endblock %}
