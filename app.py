@@ -774,6 +774,34 @@ def quick_add_food():
         logging.error(f"Ошибка при быстром добавлении продукта: {str(e)}")
         return jsonify({'success': False, 'message': 'Произошла ошибка при добавлении'})
 
+@app.route('/load_all_products')
+def load_all_products():
+    """Загружает все дополнительные продукты в базу данных"""
+    try:
+        current_count = Product.query.count()
+        logging.info(f"Current product count: {current_count}")
+        
+        # Проверяем, не загружены ли уже дополнительные продукты
+        if current_count > 70:  # Если уже больше 70 продуктов
+            flash(f'Продукты уже загружены! Всего продуктов: {current_count}', 'info')
+            return redirect(url_for('products'))
+        
+        # Добавляем дополнительные продукты порциями
+        exec(open('add_more_products.py').read())
+        
+        new_count = Product.query.count()
+        added_count = new_count - current_count
+        
+        flash(f'Успешно добавлено {added_count} продуктов! Общее количество: {new_count}', 'success')
+        logging.info(f"Added {added_count} products, total: {new_count}")
+        
+        return redirect(url_for('products'))
+        
+    except Exception as e:
+        logging.error(f"Error loading additional products: {str(e)}")
+        flash(f'Ошибка при загрузке продуктов: {str(e)}', 'error')
+        return redirect(url_for('products'))
+
 @app.route('/init_db')
 def initialize_database():
     """Принудительная инициализация базы данных"""
