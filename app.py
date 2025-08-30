@@ -641,30 +641,5 @@ def migrate_db():
         flash(f'Ошибка при обновлении БД: {str(e)}', 'danger')
         return redirect(url_for('products'))
 
-def init_db():
-    """Инициализация БД с повторными попытками"""
-    max_retries = 3
-    for attempt in range(max_retries):
-        try:
-            with app.app_context():
-                db.create_all()
-                logging.info("Таблицы БД созданы/проверены")
-                return True
-        except Exception as e:
-            logging.error(f"Попытка {attempt + 1}/{max_retries} создания БД неудачна: {e}")
-            if attempt < max_retries - 1:
-                import time
-                time.sleep(2)
-    return False
-
-@app.before_request
-def ensure_db():
-    if not hasattr(ensure_db, 'initialized'):
-        if init_db():
-            ensure_db.initialized = True
-        else:
-            logging.error("Не удалось инициализировать БД после всех попыток")
-
 if __name__ == '__main__':
-    logging.info("Запускаем Flask сервер...")
     app.run(debug=True)
