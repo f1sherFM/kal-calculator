@@ -30,22 +30,62 @@
                     </div>
                     <div class="col-md-2 mb-2">
                         <button class="btn btn-outline-warning w-100 btn-sm" onclick="filterByCategory('Фрукты и ягоды')">
-                            <i class="fas fa-apple-alt"></i> Фрукты
+                            <i class="fas fa-apple-alt"></i> Фрукты и ягоды
                         </button>
                     </div>
                     <div class="col-md-2 mb-2">
                         <button class="btn btn-outline-info w-100 btn-sm" onclick="filterByCategory('Молочные продукты')">
-                            <i class="fas fa-cheese"></i> Молочные
+                            <i class="fas fa-cheese"></i> Молочные продукты
                         </button>
                     </div>
                     <div class="col-md-2 mb-2">
                         <button class="btn btn-outline-secondary w-100 btn-sm" onclick="filterByCategory('Крупы и злаки')">
-                            <i class="fas fa-seedling"></i> Крупы
+                            <i class="fas fa-seedling"></i> Крупы и злаки
                         </button>
                     </div>
                     <div class="col-md-2 mb-2">
                         <button class="btn btn-outline-danger w-100 btn-sm" onclick="filterByCategory('Хлеб и выпечка')">
-                            <i class="fas fa-bread-slice"></i> Выпечка
+                            <i class="fas fa-bread-slice"></i> Хлеб и выпечка
+                        </button>
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <button class="btn btn-outline-primary w-100 btn-sm" onclick="filterByCategory('Рыба и морепродукты')">
+                            <i class="fas fa-fish"></i> Рыба и морепродукты
+                        </button>
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <button class="btn btn-outline-warning w-100 btn-sm" onclick="filterByCategory('Орехи и семена')">
+                            <i class="fas fa-acorn"></i> Орехи и семена
+                        </button>
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <button class="btn btn-outline-success w-100 btn-sm" onclick="filterByCategory('Бобовые')">
+                            <i class="fas fa-leaf"></i> Бобовые
+                        </button>
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <button class="btn btn-outline-info w-100 btn-sm" onclick="filterByCategory('Масла и жиры')">
+                            <i class="fas fa-tint"></i> Масла и жиры
+                        </button>
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <button class="btn btn-outline-danger w-100 btn-sm" onclick="filterByCategory('Сладости')">
+                            <i class="fas fa-candy-cane"></i> Сладости
+                        </button>
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <button class="btn btn-outline-primary w-100 btn-sm" onclick="filterByCategory('Напитки')">
+                            <i class="fas fa-glass-whiskey"></i> Напитки
+                        </button>
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <button class="btn btn-outline-secondary w-100 btn-sm" onclick="filterByCategory('Готовые блюда')">
+                            <i class="fas fa-utensils"></i> Готовые блюда
+                        </button>
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <button class="btn btn-outline-warning w-100 btn-sm" onclick="filterByCategory('Прочее')">
+                            <i class="fas fa-question"></i> Прочее
                         </button>
                     </div>
                     <div class="col-md-2 mb-2">
@@ -97,9 +137,16 @@
                     </thead>
                     <tbody>
                         {% for product in products.items %}
-                        <tr>
+                        <tr class="product-row" 
+                            data-product-id="{{ product.id }}" 
+                            data-created="{{ product.created_at.strftime('%Y-%m-%d %H:%M:%S') if product.created_at else '' }}">
                             <td>
                                 <strong>{{ product.name }}</strong>
+                                {% if product.created_at and (product.created_at.date() == today) %}
+                                    <span class="badge bg-success ms-2 new-product-badge">
+                                        <i class="fas fa-star"></i> Новый!
+                                    </span>
+                                {% endif %}
                             </td>
                             <td>
                                 <span class="badge bg-secondary">{{ product.category or 'Прочее' }}</span>
@@ -229,11 +276,71 @@
 {% block scripts %}
 <script>
 function filterByCategory(category) {
-    window.location.href = `/products?category=${encodeURIComponent(category)}`;
+    const url = new URL('/products', window.location.origin);
+    url.searchParams.set('category', category);
+    url.searchParams.set('_t', Date.now()); // Cache busting
+    window.location.href = url.toString();
 }
 
 function clearFilters() {
-    window.location.href = '/products';
+    const url = new URL('/products', window.location.origin);
+    url.searchParams.set('_t', Date.now()); // Cache busting
+    window.location.href = url.toString();
 }
+
+// Обновление ссылок для cache-busting
+document.addEventListener('DOMContentLoaded', function() {
+    // Добавляем timestamp ко всем ссылкам
+    const links = document.querySelectorAll('a[href*="add_food"]');
+    links.forEach(link => {
+        const originalHref = link.getAttribute('href');
+        if (originalHref && !originalHref.includes('_t=')) {
+            const separator = originalHref.includes('?') ? '&' : '?';
+            link.setAttribute('href', originalHref + separator + '_t=' + Date.now());
+        }
+    });
+    
+    // Подсвечиваем новые продукты
+    const newProductBadges = document.querySelectorAll('.new-product-badge');
+    newProductBadges.forEach(badge => {
+        // Анимация появления
+        badge.style.animation = 'pulse 1.5s infinite';
+    });
+    
+    // Проверяем URL на наличие параметров поиска по новому продукту
+    const urlParams = new URLSearchParams(window.location.search);
+    const searchParam = urlParams.get('search');
+    if (searchParam) {
+        // Подсвечиваем найденные продукты
+        const productRows = document.querySelectorAll('.product-row');
+        productRows.forEach(row => {
+            const productName = row.querySelector('strong').textContent.toLowerCase();
+            if (productName.includes(searchParam.toLowerCase())) {
+                row.style.backgroundColor = '#fff3cd';
+                row.style.animation = 'highlight 2s ease-out';
+            }
+        });
+    }
+});
+
+// Добавляем CSS стили для анимаций
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+    
+    @keyframes highlight {
+        0% { background-color: #fff3cd; }
+        100% { background-color: transparent; }
+    }
+    
+    .new-product-badge {
+        animation: pulse 1.5s infinite;
+    }
+`;
+document.head.appendChild(style);
 </script>
 {% endblock %}

@@ -5,6 +5,7 @@ import datetime as dt
 import os
 import logging
 from typing import Optional
+import time
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -34,7 +35,28 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     'pool_pre_ping': True
 }
 
+# Добавляем настройки для предотвращения кэширования
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+
 db = SQLAlchemy(app)
+
+# Добавляем мидлвар для обеспечения свежих данных
+@app.before_request
+def refresh_database_session():
+    """Refresh database session before each request to ensure fresh data"""
+    try:
+        db.session.expire_all()
+    except Exception as e:
+        logging.warning(f"Error expiring database session: {str(e)}")
+
+@app.after_request
+def add_cache_headers(response):
+    """Add cache-control headers to prevent caching of dynamic data"""
+    if request.endpoint in ['index', 'products', 'add_food', 'profile', 'statistics']:
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+    return response
 
 # Инициализация базы данных при импорте модуля (для gunicorn)
 def init_database():
@@ -258,6 +280,9 @@ def index():
         # Проверяем существование таблиц перед обращением к ним
         ensure_tables_exist()
         
+        # Принудительное обновление сессии для получения свежих данных
+        db.session.expire_all()
+        
         today = dt.date.today()
         
         # Получаем записи за сегодня
@@ -307,6 +332,9 @@ def index():
 
 @app.route('/products')
 def products():
+    # Принудительное обновление сессии для получения свежих данных
+    db.session.expire_all()
+    
     page = request.args.get('page', 1, type=int)
     search = request.args.get('search', '')
     category = request.args.get('category', '')
@@ -332,32 +360,52 @@ def products():
     products = query.order_by(Product.category, Product.name).paginate(page=page, per_page=20, error_out=False)
     logging.info(f"Пагинация: страница {page}, показано {len(products.items)} из {products.total} продуктов")
     
-    return render_template('products.html', products=products, search=search, category=category)
+    return render_template('products.html', products=products, search=search, category=category, today=dt.date.today())
 
 @app.route('/add_product', methods=['GET', 'POST'])
 def add_product():
     if request.method == 'POST':
-        name = request.form['name']
-        calories = float(request.form['calories'])
-        protein = float(request.form.get('protein', 0))
-        carbs = float(request.form.get('carbs', 0))
-        fat = float(request.form.get('fat', 0))
-        category = request.form.get('category', 'Прочее')
-        
-        product = Product(
-            name=name,
-            calories_per_100g=calories,
-            protein=protein,
-            carbs=carbs,
-            fat=fat,
-            category=category
-        )
-        
-        db.session.add(product)
-        db.session.commit()
-        
-        flash('Продукт успешно добавлен!', 'success')
-        return redirect(url_for('products'))
+        try:
+            name = request.form['name']
+            calories = float(request.form['calories'])
+            protein = float(request.form.get('protein', 0))
+            carbs = float(request.form.get('carbs', 0))
+            fat = float(request.form.get('fat', 0))
+            category = request.form.get('category', 'Прочее')
+            
+            # Проверяем, нет ли уже такого продукта
+            existing_product = Product.query.filter_by(name=name).first()
+            if existing_product:
+                flash(f'Продукт "{name}" уже существует в базе!', 'warning')
+                return redirect(url_for('products', search=name))
+            
+            product = Product(
+                name=name,
+                calories_per_100g=calories,
+                protein=protein,
+                carbs=carbs,
+                fat=fat,
+                category=category
+            )
+            
+            db.session.add(product)
+            db.session.commit()
+            
+            # Принудительно очищаем кэш для всех сессий
+            db.session.expire_all()
+            
+            logging.info(f"Новый продукт добавлен: {name} ({category}) - {calories} ккал/100г")
+            
+            flash(f'Продукт "{name}" успешно добавлен! Теперь он доступен всем пользователям!', 'success')
+            
+            # Перенаправляем на страницу продуктов с фильтром по категории
+            return redirect(url_for('products', category=category, search=name))
+            
+        except ValueError as e:
+            flash('Ошибка в числовых значениях. Проверьте данные.', 'danger')
+        except Exception as e:
+            logging.error(f"Ошибка при добавлении продукта: {str(e)}")
+            flash(f'Ошибка при добавлении продукта: {str(e)}', 'danger')
     
     return render_template('add_product.html')
 
@@ -389,18 +437,25 @@ def add_food():
         
         if added_count > 0:
             db.session.commit()
+            # Принудительно очищаем кэш для обновления данных
+            db.session.expire_all()
             flash(f'Добавлено {added_count} продуктов в дневник!', 'success')
         else:
             flash('Не удалось добавить продукты. Проверьте данные.', 'danger')
         
         return redirect(url_for('index'))
     
+    # Принудительное обновление сессии для получения свежих продуктов
+    db.session.expire_all()
     products = Product.query.order_by(Product.category, Product.name).all()
     selected_product_id = request.args.get('product', type=int)
     return render_template('add_food.html', products=products, today=dt.date.today(), selected_product_id=selected_product_id)
 
 @app.route('/profile', methods=['GET', 'POST'])
 def profile():
+    # Принудительное обновление сессии для получения свежих данных
+    db.session.expire_all()
+    
     user_profile = UserProfile.query.first()
     
     if request.method == 'POST':
@@ -467,6 +522,9 @@ def profile():
 
 @app.route('/statistics')
 def statistics():
+    # Принудительное обновление сессии для получения свежих данных
+    db.session.expire_all()
+    
     # Статистика за последние 7 дней
     from datetime import timedelta
     
@@ -516,6 +574,8 @@ def delete_entry(entry_id):
 @app.route('/api/search_products')
 def search_products():
     query = request.args.get('q', '')
+    # Добавляем принудительное обновление сессии для получения свежих данных
+    db.session.expire_all()
     products = Product.query.filter(Product.name.ilike(f'%{query}%')).limit(10).all()  # type: ignore
     
     results = []
@@ -523,10 +583,92 @@ def search_products():
         results.append({
             'id': product.id,
             'name': product.name,
-            'calories': product.calories_per_100g
+            'calories': product.calories_per_100g,
+            'category': product.category
         })
     
     return jsonify(results)
+
+@app.route('/api/get_all_products')
+def get_all_products():
+    """Получение всех продуктов для реального времени"""
+    try:
+        # Принудительное обновление сессии
+        db.session.expire_all()
+        
+        page = request.args.get('page', 1, type=int)
+        search = request.args.get('search', '')
+        category = request.args.get('category', '')
+        
+        query = Product.query
+        
+        if category:
+            query = query.filter(Product.category.ilike(f'%{category}%'))  # type: ignore
+        
+        if search:
+            query = query.filter(Product.name.ilike(f'%{search}%'))  # type: ignore
+        
+        products = query.order_by(Product.category, Product.name).paginate(
+            page=page, per_page=20, error_out=False
+        )
+        
+        result = {
+            'products': [{
+                'id': p.id,
+                'name': p.name,
+                'calories_per_100g': p.calories_per_100g,
+                'protein': p.protein,
+                'carbs': p.carbs,
+                'fat': p.fat,
+                'category': p.category,
+                'created_at': p.created_at.strftime('%d.%m.%Y %H:%M') if p.created_at else ''
+            } for p in products.items],
+            'total': products.total,
+            'pages': products.pages,
+            'current_page': page,
+            'has_next': products.has_next,
+            'has_prev': products.has_prev
+        }
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        logging.error(f"Error getting all products: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/get_fresh_data')
+def get_fresh_data():
+    """Получение свежих данных для обновления страницы"""
+    try:
+        # Принудительное обновление сессии
+        db.session.expire_all()
+        
+        today = dt.date.today()
+        
+        # Получаем свежие данные о продуктах
+        total_products = Product.query.count()
+        
+        # Получаем свежие данные о записях за сегодня
+        today_entries = FoodEntry.query.filter_by(date=today).all()
+        
+        # Получаем профиль
+        profile = UserProfile.query.first()
+        
+        # Подсчитываем калории
+        total_calories = sum(entry.total_calories for entry in today_entries)
+        
+        return jsonify({
+            'success': True,
+            'timestamp': int(time.time()),
+            'total_products': total_products,
+            'total_calories_today': round(total_calories, 1),
+            'entries_count_today': len(today_entries),
+            'profile_exists': profile is not None
+        })
+        
+    except Exception as e:
+        logging.error(f"Error getting fresh data: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/add_all_products')
 def add_all_products():
@@ -741,6 +883,9 @@ def add_all_products():
 def quick_add_food():
     """API endpoint для быстрого добавления продуктов"""
     try:
+        # Принудительное обновление сессии для получения свежих данных
+        db.session.expire_all()
+        
         data = request.get_json()
         product_name = data['product_name']
         weight = float(data['weight'])
@@ -763,11 +908,16 @@ def quick_add_food():
         db.session.add(food_entry)
         db.session.commit()
         
+        # Принудительно очищаем кэш для всех сессий
+        db.session.expire_all()
+        
         logging.info(f"Быстро добавлен продукт: {product_name} ({weight}г) в {meal_type}")
         
         return jsonify({
             'success': True, 
-            'message': f'Добавлено: {product_name} ({weight}г) в {meal_type}'
+            'message': f'Добавлено: {product_name} ({weight}г) в {meal_type}',
+            'product_id': product.id,
+            'entry_id': food_entry.id
         })
         
     except Exception as e:
