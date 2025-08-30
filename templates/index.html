@@ -317,7 +317,7 @@ function quickAddProduct(productName, weight) {
     const today = new Date().toISOString().split('T')[0];
     
     // Отправляем POST запрос для добавления продукта
-    fetch('/api/quick_add_food', {
+    fetch('/api/quick_add_food?' + new URLSearchParams({_t: Date.now()}), {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -338,9 +338,11 @@ function quickAddProduct(productName, weight) {
             // Показываем уведомление
             showNotification('Продукт успешно добавлен!', 'success');
             
-            // Перезагружаем страницу через 1 секунду
+            // Перезагружаем страницу с cache-busting через 1 секунду
             setTimeout(() => {
-                window.location.reload();
+                const url = new URL(window.location.href);
+                url.searchParams.set('_t', Date.now());
+                window.location.href = url.toString();
             }, 1000);
         } else {
             showNotification('Ошибка: ' + data.message, 'error');
