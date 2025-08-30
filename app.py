@@ -1146,114 +1146,82 @@ def initialize_database():
 
 @app.route('/cleanup_duplicates')
 def cleanup_duplicates():
-    """Очистка дубликатов продуктов в базе данных"""
-    deleted_count = 0
-    kept_count = 0
-    
+    """Оптимизированная очистка дубликатов (избегаем timeout)"""
     try:
-        logging.info("Starting duplicate cleanup process...")
+        logging.info("Начинаем оптимизированную очистку дубликатов...")
         
-        # Принудительное обновление сессии
         db.session.expire_all()
-        logging.info("Session expired and refreshed")
+        from sqlalchemy import text
         
-        # Находим дубликаты по имени продукта
-        from sqlalchemy import func, text
-        
-        # Используем прямой SQL запрос для поиска дубликатов
-        logging.info("Executing duplicate detection query...")
-        duplicate_query = db.session.execute(text("""
-            SELECT name, COUNT(id) as count, MIN(id) as min_id
-            FROM products 
-            GROUP BY name 
-            HAVING COUNT(id) > 1
+        # Шаг 1: Обновляем food_entries пакетно
+        logging.info("Обновляем food_entries...")
+        update_result = db.session.execute(text("""
+            UPDATE food_entries 
+            SET product_id = (
+                SELECT MIN(p2.id) 
+                FROM products p2 
+                WHERE p2.name = (SELECT name FROM products p3 WHERE p3.id = food_entries.product_id)
+            )
+            WHERE product_id IN (
+                SELECT p.id
+                FROM products p
+                JOIN (
+                    SELECT name, MIN(id) as min_id
+                    FROM products
+                    GROUP BY name
+                    HAVING COUNT(id) > 1
+                ) dups ON p.name = dups.name AND p.id != dups.min_id
+            )
         """))
         
-        duplicates = duplicate_query.fetchall()
-        logging.info(f"Found {len(duplicates)} duplicate groups")
+        # Handle rowcount access for SQLAlchemy 2.x compatibility
+        try:
+            updated_entries = update_result.rowcount
+        except AttributeError:
+            # Fallback for SQLAlchemy 2.x where rowcount might not be available
+            updated_entries = 0
+        logging.info(f"Обновлено {updated_entries} food_entries")
         
-        if not duplicates:
-            flash('Дубликаты не найдены! База данных чистая.', 'info')
-            return redirect(url_for('products'))
+        # Шаг 2: Удаляем дубликаты одним запросом
+        logging.info("Удаляем дубликаты...")
+        delete_result = db.session.execute(text("""
+            DELETE FROM products 
+            WHERE id IN (
+                SELECT p.id
+                FROM (
+                    SELECT p.id, p.name,
+                           ROW_NUMBER() OVER (PARTITION BY p.name ORDER BY p.id) as rn
+                    FROM products p
+                ) p
+                WHERE p.name IN (
+                    SELECT name
+                    FROM products
+                    GROUP BY name
+                    HAVING COUNT(id) > 1
+                )
+                AND p.rn > 1
+            )
+        """))
         
-        # Обработка каждой группы дубликатов
-        for i, duplicate in enumerate(duplicates):
-            try:
-                product_name = duplicate[0]  # name
-                count = duplicate[1]        # count
-                min_id = duplicate[2]       # min_id
-                
-                logging.info(f"Processing duplicate group {i+1}/{len(duplicates)}: '{product_name}' (count: {count}, min_id: {min_id})")
-                
-                # Находим все продукты с одинаковым именем
-                same_name_products = Product.query.filter_by(name=product_name).order_by(Product.id).all()
-                
-                if len(same_name_products) < 2:
-                    logging.warning(f"Expected duplicates for '{product_name}' but found only {len(same_name_products)} products")
-                    continue
-                
-                # Оставляем первый (самый старый) продукт, удаляем остальные
-                products_to_delete = same_name_products[1:]  # Все кроме первого
-                
-                logging.info(f"Will keep product ID {same_name_products[0].id}, deleting {len(products_to_delete)} duplicates")
-                
-                for j, product_to_delete in enumerate(products_to_delete):
-                    try:
-                        logging.info(f"Processing deletion {j+1}/{len(products_to_delete)}: product ID {product_to_delete.id}")
-                        
-                        # Проверяем, есть ли записи в дневнике, связанные с этим продуктом
-                        food_entries = FoodEntry.query.filter_by(product_id=product_to_delete.id).all()
-                        
-                        if food_entries:
-                            # Перенаправляем записи на оригинальный продукт
-                            for entry in food_entries:
-                                entry.product_id = min_id
-                            logging.info(f"Redirected {len(food_entries)} food entries from product ID {product_to_delete.id} to ID {min_id}")
-                        
-                        # Удаляем дубликат
-                        db.session.delete(product_to_delete)
-                        deleted_count += 1
-                        logging.info(f"Marked product ID {product_to_delete.id} for deletion")
-                        
-                    except Exception as inner_e:
-                        logging.error(f"Error processing individual product deletion (ID {product_to_delete.id}): {str(inner_e)}")
-                        # Продолжаем с следующим продуктом
-                        continue
-                
-                kept_count += 1
-                
-            except Exception as group_e:
-                logging.error(f"Error processing duplicate group: {str(group_e)}")
-                # Продолжаем с следующей группой
-                continue
+        # Handle rowcount access for SQLAlchemy 2.x compatibility
+        try:
+            deleted_count = delete_result.rowcount
+        except AttributeError:
+            # Fallback for SQLAlchemy 2.x where rowcount might not be available
+            deleted_count = 0
+        logging.info(f"Удалено {deleted_count} дубликатов")
         
-        # Сохраняем изменения
-        logging.info(f"Committing changes: {deleted_count} deletions, {kept_count} kept")
         db.session.commit()
-        
-        # Принудительное обновление сессии
         db.session.expire_all()
         
-        logging.info(f"Duplicate cleanup completed successfully. Deleted: {deleted_count}, Kept: {kept_count}")
-        
-        flash(f'✅ Очистка завершена! Удалено {deleted_count} дубликатов. Оставлено {kept_count} уникальных продуктов.', 'success')
-        
-        return redirect(url_for('products'))
+        flash(f'✅ Очистка завершена! Удалено {deleted_count} дубликатов, обновлено {updated_entries} записей.', 'success')
         
     except Exception as e:
-        logging.error(f"Critical error in cleanup_duplicates: {str(e)}")
-        logging.error(f"Error type: {type(e).__name__}")
-        import traceback
-        logging.error(f"Full traceback: {traceback.format_exc()}")
-        
-        try:
-            db.session.rollback()
-            logging.info("Database session rolled back successfully")
-        except Exception as rollback_e:
-            logging.error(f"Error during rollback: {str(rollback_e)}")
-        
-        flash(f'Ошибка при очистке дубликатов: {str(e)}. Операция отменена.', 'danger')
-        return redirect(url_for('products'))
+        logging.error(f"Ошибка в cleanup_duplicates: {str(e)}")
+        db.session.rollback()
+        flash(f'Ошибка: {str(e)}', 'danger')
+    
+    return redirect(url_for('products'))
 
 @app.route('/api/get_duplicate_count')
 def get_duplicate_count():
