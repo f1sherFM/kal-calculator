@@ -59,15 +59,69 @@ def init_database():
             if Product.query.count() == 0:
                 logging.info("Adding default products...")
                 default_products = [
+                    # Хлебобулочные изделия
                     Product(name="Хлеб белый", calories_per_100g=265, protein=8.1, carbs=48.8, fat=3.2, category="Хлебобулочные"),
+                    Product(name="Хлеб черный", calories_per_100g=214, protein=6.6, carbs=40.7, fat=1.3, category="Хлебобулочные"),
+                    Product(name="Хлеб ржаной", calories_per_100g=181, protein=6.6, carbs=34.2, fat=1.2, category="Хлебобулочные"),
+                    Product(name="Батон нарезной", calories_per_100g=264, protein=7.5, carbs=50.9, fat=2.9, category="Хлебобулочные"),
+                    Product(name="Булочка с маком", calories_per_100g=336, protein=7.8, carbs=55.5, fat=9.9, category="Хлебобулочные"),
+                    Product(name="Круассан", calories_per_100g=406, protein=8.2, carbs=45.8, fat=20.9, category="Хлебобулочные"),
+                    Product(name="Багет", calories_per_100g=262, protein=8.1, carbs=51.4, fat=3.3, category="Хлебобулочные"),
+                    Product(name="Лаваш тонкий", calories_per_100g=236, protein=7.9, carbs=47.6, fat=1.2, category="Хлебобулочные"),
+                    Product(name="Тортилья", calories_per_100g=218, protein=5.7, carbs=43.2, fat=2.9, category="Хлебобулочные"),
+                    Product(name="Сухари панировочные", calories_per_100g=347, protein=11.2, carbs=72.1, fat=1.8, category="Хлебобулочные"),
+
+                    # Молочные продукты
                     Product(name="Молоко 3.2%", calories_per_100g=60, protein=2.9, carbs=4.7, fat=3.2, category="Молочные"),
-                    Product(name="Яйцо куриное", calories_per_100g=155, protein=12.7, carbs=0.7, fat=10.9, category="Мясо и яйца"),
-                    Product(name="Рис белый", calories_per_100g=365, protein=7.5, carbs=78.9, fat=0.7, category="Крупы"),
-                    Product(name="Курица грудка", calories_per_100g=165, protein=31.0, carbs=0.0, fat=3.6, category="Мясо и яйца"),
-                    Product(name="Яблоко", calories_per_100g=47, protein=0.4, carbs=9.8, fat=0.4, category="Фрукты"),
-                    Product(name="Банан", calories_per_100g=96, protein=1.5, carbs=21.0, fat=0.2, category="Фрукты"),
-                    Product(name="Картофель", calories_per_100g=80, protein=2.0, carbs=16.3, fat=0.4, category="Овощи")
-                ]
+                    Product(name="Молоко 2.5%", calories_per_100g=54, protein=2.8, carbs=4.7, fat=2.5, category="Молочные"),
+                    Product(name="Молоко 1.5%", calories_per_100g=47, protein=3.0, carbs=4.9, fat=1.5, category="Молочные"),
+                    Product(name="Молоко обезжиренное", calories_per_100g=35, protein=3.4, carbs=5.0, fat=0.1, category="Молочные"),
+                    Product(name="Сливки 10%", calories_per_100g=118, protein=3.0, carbs=4.0, fat=10.0, category="Молочные"),
+                    Product(name="Сливки 20%", calories_per_100g=206, protein=2.8, carbs=3.7, fat=20.0, category="Молочные"),
+                    Product(name="Сметана 15%", calories_per_100g=158, protein=2.6, carbs=3.0, fat=15.0, category="Молочные"),
+                    Product(name="Сметана 20%", calories_per_100g=206, protein=2.8, carbs=3.2, fat=20.0, category="Молочные"),
+                    Product(name="Творог 0%", calories_per_100g=88, protein=16.7, carbs=1.3, fat=0.6, category="Молочные"),
+                    Product(name="Творог 5%", calories_per_100g=121, protein=17.2, carbs=1.8, fat=5.0, category="Молочные"),
+                    Product(name="Творог 9%", calories_per_100g=159, protein=16.7, carbs=2.0, fat=9.0, category="Молочные"),
+                    Product(name="Йогурт натуральный", calories_per_100g=66, protein=5.0, carbs=3.5, fat=3.2, category="Молочные"),
+                    Product(name="Кефир 1%", calories_per_100g=40, protein=2.8, carbs=4.0, fat=1.0, category="Молочные"),
+                    Product(name="Кефир 2.5%", calories_per_100g=53, protein=2.8, carbs=4.0, fat=2.5, category="Молочные"),
+                    Product(name="Ряженка 4%", calories_per_100g=67, protein=2.9, carbs=4.2, fat=4.0, category="Молочные"),
+                    Product(name="Простокваша", calories_per_100g=58, protein=2.9, carbs=4.1, fat=3.2, category="Молочные"),
+
+                    # Сыры
+                    Product(name="Сыр российский", calories_per_100g=364, protein=23.2, carbs=0.3, fat=29.5, category="Сыры"),
+                    Product(name="Сыр голландский", calories_per_100g=352, protein=26.8, carbs=0.0, fat=26.8, category="Сыры"),
+                    Product(name="Сыр швейцарский", calories_per_100g=396, protein=24.9, carbs=0.0, fat=31.8, category="Сыры"),
+                    Product(name="Сыр моцарелла", calories_per_100g=280, protein=22.2, carbs=2.2, fat=22.4, category="Сыры"),
+                    Product(name="Сыр пармезан", calories_per_100g=431, protein=38.0, carbs=1.0, fat=29.0, category="Сыры"),
+                    Product(name="Сыр фета", calories_per_100g=264, protein=14.2, carbs=4.1, fat=21.3, category="Сыры"),
+                    Product(name="Сыр чеддер", calories_per_100g=402, protein=25.0, carbs=1.3, fat=33.1, category="Сыры"),
+                    Product(name="Сыр камамбер", calories_per_100g=299, protein=19.8, carbs=0.5, fat=24.3, category="Сыры"),
+                    Product(name="Сыр творожный", calories_per_100g=342, protein=22.6, carbs=4.1, fat=26.2, category="Сыры"),
+                    Product(name="Сыр плавленый", calories_per_100g=257, protein=16.8, carbs=23.8, fat=11.2, category="Сыры"),
+
+                    # Мясо и птица
+                    Product(name="Говядина постная", calories_per_100g=158, protein=22.2, carbs=0.0, fat=7.1, category="Мясо и птица"),
+                    Product(name="Свинина постная", calories_per_100g=142, protein=20.9, carbs=0.0, fat=6.1, category="Мясо и птица"),
+                    Product(name="Баранина", calories_per_100g=203, protein=16.3, carbs=0.0, fat=15.3, category="Мясо и птица"),
+                    Product(name="Телятина", calories_per_100g=97, protein=19.7, carbs=0.0, fat=1.2, category="Мясо и птица"),
+                    Product(name="Курица грудка", calories_per_100g=165, protein=31.0, carbs=0.0, fat=3.6, category="Мясо и птица"),
+                    Product(name="Курица бедро", calories_per_100g=185, protein=16.8, carbs=0.0, fat=12.8, category="Мясо и птица"),
+                    Product(name="Курица крылья", calories_per_100g=186, protein=19.2, carbs=0.0, fat=12.2, category="Мясо и птица"),
+                    Product(name="Индейка грудка", calories_per_100g=84, protein=19.2, carbs=0.0, fat=0.7, category="Мясо и птица"),
+                    Product(name="Утка", calories_per_100g=308, protein=16.0, carbs=0.0, fat=27.8, category="Мясо и птица"),
+                    Product(name="Гусь", calories_per_100g=319, protein=16.1, carbs=0.0, fat=28.2, category="Мясо и птица"),
+                    Product(name="Кролик", calories_per_100g=156, protein=20.7, carbs=0.0, fat=7.8, category="Мясо и птица"),
+
+                    # Колбасные изделия
+                    Product(name="Колбаса докторская", calories_per_100g=257, protein=13.7, carbs=1.5, fat=22.8, category="Колбасные изделия"),
+                    Product(name="Колбаса копченая", calories_per_100g=511, protein=16.2, carbs=0.0, fat=47.8, category="Колбасные изделия"),
+                    Product(name="Сосиски молочные", calories_per_100g=266, protein=11.0, carbs=1.6, fat=23.9, category="Колбасные изделия"),
+                    Product(name="Сардельки", calories_per_100g=332, protein=10.1, carbs=1.8, fat=31.6, category="Колбасные изделия"),
+                    Product(name="Ветчина", calories_per_100g=279, protein=22.6, carbs=0.0, fat=20.9, category="Колбасные изделия"),
+                    Product(name="Бекон", calories_per_100g=500, protein=23.0, carbs=0.0, fat=45.0, category="Колбасные изделия"),
+                    Product(name="Салями", calories_per_100g=568, protein=13.0, carbs=1.0, fat=57.0, category="Колбасные изделия")]
                 
                 for product in default_products:
                     db.session.add(product)
