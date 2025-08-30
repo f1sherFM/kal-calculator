@@ -36,6 +36,46 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
 
 db = SQLAlchemy(app)
 
+# Инициализация базы данных при импорте модуля (для gunicorn)
+def init_database():
+    """Initialize database tables and default data"""
+    try:
+        with app.app_context():
+            # Создаем все таблицы
+            db.create_all()
+            logging.info("Database tables created successfully")
+            
+            # Добавляем базовые продукты если их нет
+            if Product.query.count() == 0:
+                default_products = [
+                    Product(name="Хлеб белый", calories_per_100g=265, protein=8.1, carbs=48.8, fat=3.2, category="Хлебобулочные"),
+                    Product(name="Молоко 3.2%", calories_per_100g=60, protein=2.9, carbs=4.7, fat=3.2, category="Молочные"),
+                    Product(name="Яйцо куриное", calories_per_100g=155, protein=12.7, carbs=0.7, fat=10.9, category="Мясо и яйца"),
+                    Product(name="Рис белый", calories_per_100g=365, protein=7.5, carbs=78.9, fat=0.7, category="Крупы"),
+                    Product(name="Курица грудка", calories_per_100g=165, protein=31.0, carbs=0.0, fat=3.6, category="Мясо и яйца"),
+                    Product(name="Яблоко", calories_per_100g=47, protein=0.4, carbs=9.8, fat=0.4, category="Фрукты"),
+                    Product(name="Банан", calories_per_100g=96, protein=1.5, carbs=21.0, fat=0.2, category="Фрукты"),
+                    Product(name="Картофель", calories_per_100g=80, protein=2.0, carbs=16.3, fat=0.4, category="Овощи")
+                ]
+                
+                for product in default_products:
+                    db.session.add(product)
+                
+                db.session.commit()
+                logging.info(f"Added {len(default_products)} default products")
+            else:
+                logging.info("Database already has products, skipping initialization")
+                
+    except Exception as e:
+        logging.error(f"Error initializing database: {str(e)}")
+        # Не поднимаем исключение, чтобы приложение продолжило работать
+
+# Инициализируем базу данных при загрузке модуля
+try:
+    init_database()
+except Exception as e:
+    logging.error(f"Failed to initialize database on startup: {str(e)}")
+
 # Модели базы данных
 class Product(db.Model):
     __tablename__ = 'products'
