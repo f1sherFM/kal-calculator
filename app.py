@@ -641,18 +641,29 @@ def migrate_db():
         flash(f'Ошибка при обновлении БД: {str(e)}', 'danger')
         return redirect(url_for('products'))
 
+@app.before_first_request
+def create_tables():
+    try:
+        db.create_all()
+        logging.info("Таблицы БД созданы/проверены")
+    except Exception as e:
+        logging.error(f"Ошибка создания таблиц: {e}")
+
 if __name__ == '__main__':
     with app.app_context():
         logging.info("Запуск приложения...")
-        db.create_all()
-        logging.info("Таблицы БД созданы/проверены")
-        
-        # Проверяем количество продуктов в БД
-        current_products_count = Product.query.count()
-        logging.info(f"Текущее количество продуктов в БД: {current_products_count}")
-        
-        # Инициализация завершена
-        logging.info("Инициализация БД завершена")
+        try:
+            db.create_all()
+            logging.info("Таблицы БД созданы/проверены")
+            
+            # Проверяем количество продуктов в БД
+            current_products_count = Product.query.count()
+            logging.info(f"Текущее количество продуктов в БД: {current_products_count}")
+            
+            # Инициализация завершена
+            logging.info("Инициализация БД завершена")
+        except Exception as e:
+            logging.error(f"Ошибка инициализации БД: {e}")
     
     logging.info("Запускаем Flask сервер...")
     app.run(debug=True)
