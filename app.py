@@ -40,18 +40,107 @@ app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 
 db = SQLAlchemy(app)
 
+# Модели базы данных
+class Product(db.Model):
+    __tablename__ = 'products'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    calories_per_100g = db.Column(db.Float, nullable=False)
+    protein = db.Column(db.Float, default=0)
+    carbs = db.Column(db.Float, default=0)
+    fat = db.Column(db.Float, default=0)
+    category = db.Column(db.String(50), default='Прочее')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def __init__(self, name: str, calories_per_100g: float, protein: float = 0, carbs: float = 0, fat: float = 0, category: str = 'Прочее', **kwargs):
+        super().__init__(**kwargs)
+        self.name = name
+        self.calories_per_100g = calories_per_100g
+        self.protein = protein
+        self.carbs = carbs
+        self.fat = fat
+        self.category = category
+    
+    def __repr__(self):
+        return f'<Product {self.name}>'
+
+class FoodEntry(db.Model):
+    __tablename__ = 'food_entries'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+    weight = db.Column(db.Float, nullable=False)  # вес в граммах
+    date = db.Column(db.Date, nullable=False, default=dt.date.today)
+    meal_type = db.Column(db.String(20), nullable=False)  # завтрак, обед, ужин, перекус
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    product = db.relationship('Product', backref=db.backref('entries', lazy=True))
+    
+    def __init__(self, product_id: int, weight: float, meal_type: str, date: Optional[dt.date] = None, **kwargs):
+        super().__init__(**kwargs)
+        self.product_id = product_id
+        self.weight = weight
+        self.meal_type = meal_type
+        if date is not None:
+            self.date = date
+    
+    @property
+    def total_calories(self):
+        return (self.product.calories_per_100g * self.weight) / 100
+    
+    @property
+    def total_protein(self):
+        return (self.product.protein * self.weight) / 100
+    
+    @property
+    def total_carbs(self):
+        return (self.product.carbs * self.weight) / 100
+    
+    @property
+    def total_fat(self):
+        return (self.product.fat * self.weight) / 100
+
+class UserProfile(db.Model):
+    __tablename__ = 'user_profile'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    age = db.Column(db.Integer)
+    gender = db.Column(db.String(10))  # male/female
+    weight = db.Column(db.Float)  # текущий вес
+    height = db.Column(db.Float)  # рост в см
+    activity_level = db.Column(db.String(20))  # sedentary, light, moderate, active, very_active
+    goal = db.Column(db.String(20))  # lose, maintain, gain
+    target_calories = db.Column(db.Integer)  # целевые калории в день
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def __init__(self, name: str, age: Optional[int] = None, gender: Optional[str] = None, 
+                 weight: Optional[float] = None, height: Optional[float] = None, 
+                 activity_level: Optional[str] = None, goal: Optional[str] = None, 
+                 target_calories: Optional[int] = None, **kwargs):
+        super().__init__(**kwargs)
+        self.name = name
+        self.age = age
+        self.gender = gender
+        self.weight = weight
+        self.height = height
+        self.activity_level = activity_level
+        self.goal = goal
+        self.target_calories = target_calories
+
 # Добавляем мидлвар для обеспечения свежих данных
 @app.before_request
 def refresh_database_session():
-    """Refresh database session before each request to ensure fresh data"""
+    """Рефреш базы данных сессия перед каждым запросом для обеспечения свежих данных"""
     try:
         db.session.expire_all()
     except Exception as e:
-        logging.warning(f"Error expiring database session: {str(e)}")
+        logging.warning(f"Ошибка обновления базы данных сессия: {str(e)}")
 
 @app.after_request
 def add_cache_headers(response):
-    """Add cache-control headers to prevent caching of dynamic data"""
+    """Добавить cache-control заголовки для предотвращения кэширования динамических данных"""
     if request.endpoint in ['index', 'products', 'add_food', 'profile', 'statistics']:
         response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
         response.headers['Pragma'] = 'no-cache'
@@ -183,95 +272,6 @@ try:
     init_database()
 except Exception as e:
     logging.error(f"Failed to initialize database on startup: {str(e)}")
-
-# Модели базы данных
-class Product(db.Model):
-    __tablename__ = 'products'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    calories_per_100g = db.Column(db.Float, nullable=False)
-    protein = db.Column(db.Float, default=0)
-    carbs = db.Column(db.Float, default=0)
-    fat = db.Column(db.Float, default=0)
-    category = db.Column(db.String(50), default='Прочее')
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    def __init__(self, name: str, calories_per_100g: float, protein: float = 0, carbs: float = 0, fat: float = 0, category: str = 'Прочее', **kwargs):
-        super().__init__(**kwargs)
-        self.name = name
-        self.calories_per_100g = calories_per_100g
-        self.protein = protein
-        self.carbs = carbs
-        self.fat = fat
-        self.category = category
-    
-    def __repr__(self):
-        return f'<Product {self.name}>'
-
-class FoodEntry(db.Model):
-    __tablename__ = 'food_entries'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
-    weight = db.Column(db.Float, nullable=False)  # вес в граммах
-    date = db.Column(db.Date, nullable=False, default=dt.date.today)
-    meal_type = db.Column(db.String(20), nullable=False)  # завтрак, обед, ужин, перекус
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    product = db.relationship('Product', backref=db.backref('entries', lazy=True))
-    
-    def __init__(self, product_id: int, weight: float, meal_type: str, date: Optional[dt.date] = None, **kwargs):
-        super().__init__(**kwargs)
-        self.product_id = product_id
-        self.weight = weight
-        self.meal_type = meal_type
-        if date is not None:
-            self.date = date
-    
-    @property
-    def total_calories(self):
-        return (self.product.calories_per_100g * self.weight) / 100
-    
-    @property
-    def total_protein(self):
-        return (self.product.protein * self.weight) / 100
-    
-    @property
-    def total_carbs(self):
-        return (self.product.carbs * self.weight) / 100
-    
-    @property
-    def total_fat(self):
-        return (self.product.fat * self.weight) / 100
-
-class UserProfile(db.Model):
-    __tablename__ = 'user_profile'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    age = db.Column(db.Integer)
-    gender = db.Column(db.String(10))  # male/female
-    weight = db.Column(db.Float)  # текущий вес
-    height = db.Column(db.Float)  # рост в см
-    activity_level = db.Column(db.String(20))  # sedentary, light, moderate, active, very_active
-    goal = db.Column(db.String(20))  # lose, maintain, gain
-    target_calories = db.Column(db.Integer)  # целевые калории в день
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    def __init__(self, name: str, age: Optional[int] = None, gender: Optional[str] = None, 
-                 weight: Optional[float] = None, height: Optional[float] = None, 
-                 activity_level: Optional[str] = None, goal: Optional[str] = None, 
-                 target_calories: Optional[int] = None, **kwargs):
-        super().__init__(**kwargs)
-        self.name = name
-        self.age = age
-        self.gender = gender
-        self.weight = weight
-        self.height = height
-        self.activity_level = activity_level
-        self.goal = goal
-        self.target_calories = target_calories
 
 # Маршруты
 @app.route('/')
@@ -1147,14 +1147,21 @@ def initialize_database():
 @app.route('/cleanup_duplicates')
 def cleanup_duplicates():
     """Очистка дубликатов продуктов в базе данных"""
+    deleted_count = 0
+    kept_count = 0
+    
     try:
+        logging.info("Starting duplicate cleanup process...")
+        
         # Принудительное обновление сессии
         db.session.expire_all()
+        logging.info("Session expired and refreshed")
         
         # Находим дубликаты по имени продукта
         from sqlalchemy import func, text
         
         # Используем прямой SQL запрос для поиска дубликатов
+        logging.info("Executing duplicate detection query...")
         duplicate_query = db.session.execute(text("""
             SELECT name, COUNT(id) as count, MIN(id) as min_id
             FROM products 
@@ -1163,59 +1170,89 @@ def cleanup_duplicates():
         """))
         
         duplicates = duplicate_query.fetchall()
+        logging.info(f"Found {len(duplicates)} duplicate groups")
         
         if not duplicates:
             flash('Дубликаты не найдены! База данных чистая.', 'info')
             return redirect(url_for('products'))
         
-        deleted_count = 0
-        kept_count = 0
-        
-        for duplicate in duplicates:
-            product_name = duplicate[0]  # name
-            count = duplicate[1]        # count
-            min_id = duplicate[2]       # min_id
-            
-            # Находим все продукты с одинаковым именем
-            same_name_products = Product.query.filter_by(name=product_name).order_by(Product.id).all()
-            
-            # Оставляем первый (самый старый) продукт, удаляем остальные
-            products_to_delete = same_name_products[1:]  # Все кроме первого
-            
-            logging.info(f"Найдено {count} дубликатов для '{product_name}', оставляем ID {min_id}, удаляем {len(products_to_delete)} дубликатов")
-            
-            for product_to_delete in products_to_delete:
-                # Проверяем, есть ли записи в дневнике, связанные с этим продуктом
-                food_entries = FoodEntry.query.filter_by(product_id=product_to_delete.id).all()
+        # Обработка каждой группы дубликатов
+        for i, duplicate in enumerate(duplicates):
+            try:
+                product_name = duplicate[0]  # name
+                count = duplicate[1]        # count
+                min_id = duplicate[2]       # min_id
                 
-                if food_entries:
-                    # Перенаправляем записи на оригинальный продукт
-                    for entry in food_entries:
-                        entry.product_id = min_id
-                    logging.info(f"Перенаправлено {len(food_entries)} записей с продукта ID {product_to_delete.id} на ID {min_id}")
+                logging.info(f"Processing duplicate group {i+1}/{len(duplicates)}: '{product_name}' (count: {count}, min_id: {min_id})")
                 
-                # Удаляем дубликат
-                db.session.delete(product_to_delete)
-                deleted_count += 1
-            
-            kept_count += 1
+                # Находим все продукты с одинаковым именем
+                same_name_products = Product.query.filter_by(name=product_name).order_by(Product.id).all()
+                
+                if len(same_name_products) < 2:
+                    logging.warning(f"Expected duplicates for '{product_name}' but found only {len(same_name_products)} products")
+                    continue
+                
+                # Оставляем первый (самый старый) продукт, удаляем остальные
+                products_to_delete = same_name_products[1:]  # Все кроме первого
+                
+                logging.info(f"Will keep product ID {same_name_products[0].id}, deleting {len(products_to_delete)} duplicates")
+                
+                for j, product_to_delete in enumerate(products_to_delete):
+                    try:
+                        logging.info(f"Processing deletion {j+1}/{len(products_to_delete)}: product ID {product_to_delete.id}")
+                        
+                        # Проверяем, есть ли записи в дневнике, связанные с этим продуктом
+                        food_entries = FoodEntry.query.filter_by(product_id=product_to_delete.id).all()
+                        
+                        if food_entries:
+                            # Перенаправляем записи на оригинальный продукт
+                            for entry in food_entries:
+                                entry.product_id = min_id
+                            logging.info(f"Redirected {len(food_entries)} food entries from product ID {product_to_delete.id} to ID {min_id}")
+                        
+                        # Удаляем дубликат
+                        db.session.delete(product_to_delete)
+                        deleted_count += 1
+                        logging.info(f"Marked product ID {product_to_delete.id} for deletion")
+                        
+                    except Exception as inner_e:
+                        logging.error(f"Error processing individual product deletion (ID {product_to_delete.id}): {str(inner_e)}")
+                        # Продолжаем с следующим продуктом
+                        continue
+                
+                kept_count += 1
+                
+            except Exception as group_e:
+                logging.error(f"Error processing duplicate group: {str(group_e)}")
+                # Продолжаем с следующей группой
+                continue
         
         # Сохраняем изменения
+        logging.info(f"Committing changes: {deleted_count} deletions, {kept_count} kept")
         db.session.commit()
         
         # Принудительное обновление сессии
         db.session.expire_all()
         
-        logging.info(f"Очистка дубликатов завершена. Удалено: {deleted_count} дубликатов, оставлено: {kept_count} уникальных продуктов")
+        logging.info(f"Duplicate cleanup completed successfully. Deleted: {deleted_count}, Kept: {kept_count}")
         
         flash(f'✅ Очистка завершена! Удалено {deleted_count} дубликатов. Оставлено {kept_count} уникальных продуктов.', 'success')
         
         return redirect(url_for('products'))
         
     except Exception as e:
-        logging.error(f"Ошибка при очистке дубликатов: {str(e)}")
-        db.session.rollback()
-        flash(f'Ошибка при очистке дубликатов: {str(e)}', 'danger')
+        logging.error(f"Critical error in cleanup_duplicates: {str(e)}")
+        logging.error(f"Error type: {type(e).__name__}")
+        import traceback
+        logging.error(f"Full traceback: {traceback.format_exc()}")
+        
+        try:
+            db.session.rollback()
+            logging.info("Database session rolled back successfully")
+        except Exception as rollback_e:
+            logging.error(f"Error during rollback: {str(rollback_e)}")
+        
+        flash(f'Ошибка при очистке дубликатов: {str(e)}. Операция отменена.', 'danger')
         return redirect(url_for('products'))
 
 @app.route('/api/get_duplicate_count')
@@ -1316,6 +1353,7 @@ def show_duplicates():
         logging.error(f"Ошибка при поиске дубликатов: {str(e)}")
         flash(f'Ошибка при поиске дубликатов: {str(e)}', 'danger')
         return redirect(url_for('products'))
+@app.route('/migrate_categories')
 def migrate_categories():
     """Миграция категорий: объединяем мясо и яйца в 'Мясо и птица'"""
     try:
