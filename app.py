@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import datetime as dt
@@ -6,6 +6,8 @@ import os
 import logging
 from typing import Optional
 import time
+from werkzeug.security import generate_password_hash, check_password_hash
+from functools import wraps
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -40,7 +42,50 @@ app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 
 db = SQLAlchemy(app)
 
+# Функции для управления сессиями
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            flash('Для доступа к этой странице необходимо войти в систему.', 'warning')
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+def get_current_user():
+    """Get current user from session"""
+    user_id = session.get('user_id')
+    if user_id:
+        user = User.query.get(user_id)
+        if user:
+            return user
+    return None
+
 # Модели базы данных
+class User(db.Model):
+    __tablename__ = 'users'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=True)
+    password_hash = db.Column(db.String(200), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Связи
+    profile = db.relationship('UserProfile', backref='user', uselist=False, cascade='all, delete-orphan')
+    food_entries = db.relationship('FoodEntry', backref='user', lazy='dynamic', cascade='all, delete-orphan')
+    
+    def __init__(self, username: str, password: str, email: Optional[str] = None, **kwargs):
+        super().__init__(**kwargs)
+        self.username = username
+        self.email = email
+        self.password_hash = generate_password_hash(password)
+    
+    def check_password(self, password: str) -> bool:
+        return check_password_hash(self.password_hash, password)
+    
+    def __repr__(self):
+        return f'<User {self.username}>'
 class Product(db.Model):
     __tablename__ = 'products'
     
@@ -69,6 +114,7 @@ class FoodEntry(db.Model):
     __tablename__ = 'food_entries'
     
     id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
     weight = db.Column(db.Float, nullable=False)  # вес в граммах
     date = db.Column(db.Date, nullable=False, default=dt.date.today)
@@ -77,8 +123,9 @@ class FoodEntry(db.Model):
     
     product = db.relationship('Product', backref=db.backref('entries', lazy=True))
     
-    def __init__(self, product_id: int, weight: float, meal_type: str, date: Optional[dt.date] = None, **kwargs):
+    def __init__(self, user_id: int, product_id: int, weight: float, meal_type: str, date: Optional[dt.date] = None, **kwargs):
         super().__init__(**kwargs)
+        self.user_id = user_id
         self.product_id = product_id
         self.weight = weight
         self.meal_type = meal_type
@@ -105,6 +152,7 @@ class UserProfile(db.Model):
     __tablename__ = 'user_profile'
     
     id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, unique=True)
     name = db.Column(db.String(100), nullable=False)
     age = db.Column(db.Integer)
     gender = db.Column(db.String(10))  # male/female
@@ -115,11 +163,12 @@ class UserProfile(db.Model):
     target_calories = db.Column(db.Integer)  # целевые калории в день
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
-    def __init__(self, name: str, age: Optional[int] = None, gender: Optional[str] = None, 
+    def __init__(self, user_id: int, name: str, age: Optional[int] = None, gender: Optional[str] = None, 
                  weight: Optional[float] = None, height: Optional[float] = None, 
                  activity_level: Optional[str] = None, goal: Optional[str] = None, 
                  target_calories: Optional[int] = None, **kwargs):
         super().__init__(**kwargs)
+        self.user_id = user_id
         self.name = name
         self.age = age
         self.gender = gender
@@ -273,8 +322,87 @@ try:
 except Exception as e:
     logging.error(f"Failed to initialize database on startup: {str(e)}")
 
-# Маршруты
+# Маршруты аутентификации
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form['username'].strip()
+        password = request.form['password']
+        confirm_password = request.form['confirm_password']
+        email = request.form.get('email', '').strip() or None
+        
+        # Проверка данных
+        if not username or len(username) < 3:
+            flash('Логин должен быть не менее 3 символов', 'error')
+            return render_template('register.html')
+        
+        if not password or len(password) < 4:
+            flash('Пароль должен быть не менее 4 символов', 'error')
+            return render_template('register.html')
+        
+        if password != confirm_password:
+            flash('Пароли не совпадают', 'error')
+            return render_template('register.html')
+        
+        # Проверка уникальности логина
+        existing_user = User.query.filter_by(username=username).first()
+        if existing_user:
+            flash('Пользователь с таким логином уже существует', 'error')
+            return render_template('register.html')
+        
+        try:
+            # Создаем нового пользователя
+            user = User(username=username, password=password, email=email)
+            db.session.add(user)
+            db.session.commit()
+            
+            # Автоматически входим в систему
+            session['user_id'] = user.id
+            session['username'] = user.username
+            
+            flash(f'Добро пожаловать, {username}! Учётная запись успешно создана.', 'success')
+            return redirect(url_for('profile'))  # Направляем на создание профиля
+            
+        except Exception as e:
+            logging.error(f"Registration error: {str(e)}")
+            flash('Ошибка при создании учётной записи. Попробуйте снова.', 'error')
+            db.session.rollback()
+    
+    return render_template('register.html')
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username'].strip()
+        password = request.form['password']
+        
+        user = User.query.filter_by(username=username).first()
+        
+        if user and user.check_password(password):
+            session['user_id'] = user.id
+            session['username'] = user.username
+            
+            next_page = request.args.get('next')
+            flash(f'Привет, {username}!', 'success')
+            
+            if next_page:
+                return redirect(next_page)
+            return redirect(url_for('index'))
+        else:
+            flash('Неверный логин или пароль', 'error')
+    
+    return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    username = session.get('username', 'Пользователь')
+    session.clear()
+    flash(f'До свидания, {username}!', 'info')
+    return redirect(url_for('login'))
+
+# Основные маршруты
 @app.route('/')
+@login_required
 def index():
     try:
         # Проверяем существование таблиц перед обращением к ним
@@ -283,10 +411,15 @@ def index():
         # Принудительное обновление сессии для получения свежих данных
         db.session.expire_all()
         
+        current_user = get_current_user()
+        if not current_user:
+            flash('Ошибка аутентификации. Пожалуйста, войдите в систему снова.', 'error')
+            return redirect(url_for('login'))
+        
         today = dt.date.today()
         
-        # Получаем записи за сегодня
-        today_entries = FoodEntry.query.filter_by(date=today).all()
+        # Получаем записи за сегодня для текущего пользователя
+        today_entries = FoodEntry.query.filter_by(user_id=current_user.id, date=today).all()
         
         # Подсчитываем общие калории за день
         total_calories = sum(entry.total_calories for entry in today_entries)
@@ -306,8 +439,8 @@ def index():
             if entry.meal_type in meals:
                 meals[entry.meal_type].append(entry)
         
-        # Получаем профиль пользователя
-        profile = UserProfile.query.first()
+        # Получаем профиль текущего пользователя
+        profile = UserProfile.query.filter_by(user_id=current_user.id).first()
         target_calories = profile.target_calories if profile and profile.target_calories else 2000
         
         return render_template('index.html', 
@@ -317,7 +450,8 @@ def index():
                              total_carbs=total_carbs,
                              total_fat=total_fat,
                              target_calories=target_calories,
-                             today=today)
+                             today=today,
+                             current_user=current_user)
     except Exception as e:
         logging.error(f"Database error in index route: {str(e)}")
         flash('Ошибка подключения к базе данных. Проверьте настройки подключения.', 'error')
@@ -328,9 +462,11 @@ def index():
                              total_carbs=0,
                              total_fat=0,
                              target_calories=2000,
-                             today=dt.date.today())
+                             today=dt.date.today(),
+                             current_user=get_current_user())
 
 @app.route('/products')
+@login_required
 def products():
     # Принудительное обновление сессии для получения свежих данных
     db.session.expire_all()
@@ -363,6 +499,7 @@ def products():
     return render_template('products.html', products=products, search=search, category=category, today=dt.date.today())
 
 @app.route('/add_product', methods=['GET', 'POST'])
+@login_required
 def add_product():
     if request.method == 'POST':
         try:
@@ -410,10 +547,15 @@ def add_product():
     return render_template('add_product.html')
 
 @app.route('/add_food', methods=['GET', 'POST'])
+@login_required
 def add_food():
     if request.method == 'POST':
         meal_type = request.form['meal_type']
         entry_date = datetime.strptime(request.form['date'], '%Y-%m-%d').date()
+        current_user = get_current_user()
+        if not current_user:
+            flash('Ошибка аутентификации. Пожалуйста, войдите в систему снова.', 'error')
+            return redirect(url_for('login'))
         
         added_count = 0
         
@@ -425,6 +567,7 @@ def add_food():
             if product_id and i < len(weights) and weights[i]:
                 try:
                     food_entry = FoodEntry(
+                        user_id=current_user.id,
                         product_id=int(product_id),
                         weight=float(weights[i]),
                         meal_type=meal_type,
@@ -452,11 +595,17 @@ def add_food():
     return render_template('add_food.html', products=products, today=dt.date.today(), selected_product_id=selected_product_id)
 
 @app.route('/profile', methods=['GET', 'POST'])
+@login_required
 def profile():
     # Принудительное обновление сессии для получения свежих данных
     db.session.expire_all()
     
-    user_profile = UserProfile.query.first()
+    current_user = get_current_user()
+    if not current_user:
+        flash('Ошибка аутентификации. Пожалуйста, войдите в систему снова.', 'error')
+        return redirect(url_for('login'))
+    
+    user_profile = UserProfile.query.filter_by(user_id=current_user.id).first()
     
     if request.method == 'POST':
         name = request.form['name']
@@ -503,6 +652,7 @@ def profile():
             user_profile.target_calories = target_calories
         else:
             user_profile = UserProfile(
+                user_id=current_user.id,
                 name=name,
                 age=age,
                 gender=gender,
@@ -518,14 +668,20 @@ def profile():
         flash('Профиль обновлен!', 'success')
         return redirect(url_for('profile'))
     
-    return render_template('profile.html', profile=user_profile)
+    return render_template('profile.html', profile=user_profile, current_user=current_user)
 
 @app.route('/statistics')
+@login_required
 def statistics():
     # Принудительное обновление сессии для получения свежих данных
     db.session.expire_all()
     
-    # Статистика за последние 7 дней
+    current_user = get_current_user()
+    if not current_user:
+        flash('Ошибка аутентификации. Пожалуйста, войдите в систему снова.', 'error')
+        return redirect(url_for('login'))
+    
+    # Статистика за последние 7 дней для текущего пользователя
     from datetime import timedelta
     
     end_date = dt.date.today()
@@ -535,7 +691,7 @@ def statistics():
     current_date = start_date
     
     while current_date <= end_date:
-        entries = FoodEntry.query.filter_by(date=current_date).all()
+        entries = FoodEntry.query.filter_by(user_id=current_user.id, date=current_date).all()
         total_calories = sum(entry.total_calories for entry in entries)
         
         daily_stats.append({
@@ -546,7 +702,11 @@ def statistics():
         current_date += timedelta(days=1)
     
     # Средние значения за неделю
-    week_entries = FoodEntry.query.filter(FoodEntry.date.between(start_date, end_date)).all()  # type: ignore
+    week_entries = FoodEntry.query.filter(
+        FoodEntry.user_id == current_user.id,
+        FoodEntry.date >= start_date,
+        FoodEntry.date <= end_date
+    ).all()
     
     if week_entries:
         avg_calories = sum(entry.total_calories for entry in week_entries) / 7
@@ -564,8 +724,14 @@ def statistics():
                          avg_fat=round(avg_fat, 1))
 
 @app.route('/delete_entry/<int:entry_id>')
+@login_required
 def delete_entry(entry_id):
-    entry = FoodEntry.query.get_or_404(entry_id)
+    current_user = get_current_user()
+    if not current_user:
+        flash('Ошибка аутентификации. Пожалуйста, войдите в систему снова.', 'error')
+        return redirect(url_for('login'))
+    
+    entry = FoodEntry.query.filter_by(id=entry_id, user_id=current_user.id).first_or_404()
     db.session.delete(entry)
     db.session.commit()
     flash('Запись удалена!', 'success')
@@ -880,11 +1046,16 @@ def add_all_products():
     return redirect(url_for('products'))
 
 @app.route('/api/quick_add_food', methods=['POST'])
+@login_required
 def quick_add_food():
     """API endpoint для быстрого добавления продуктов"""
     try:
         # Принудительное обновление сессии для получения свежих данных
         db.session.expire_all()
+        
+        current_user = get_current_user()
+        if not current_user:
+            return jsonify({'success': False, 'message': 'Ошибка аутентификации'})
         
         data = request.get_json()
         product_name = data['product_name']
@@ -899,6 +1070,7 @@ def quick_add_food():
         
         # Создаем запись о еде
         food_entry = FoodEntry(
+            user_id=current_user.id,
             product_id=product.id,
             weight=weight,
             meal_type=meal_type,
