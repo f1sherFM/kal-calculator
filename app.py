@@ -315,6 +315,91 @@ def ensure_tables_exist():
         logging.error(f"Error checking table existence: {str(e)}")
         return False
 
+def migrate_food_entries_table():
+    """Migrate food_entries table to add missing user_id column"""
+    try:
+        from sqlalchemy import text
+        logging.info("Starting food_entries table migration...")
+        
+        # Check if food_entries table exists
+        table_check = db.session.execute(text(
+            "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'food_entries')"
+        ))
+        table_exists = table_check.scalar()
+        
+        if not table_exists:
+            logging.info("food_entries table doesn't exist, creating it...")
+            db.create_all()
+            logging.info("food_entries table created successfully")
+            return True
+        
+        # Check if user_id column exists
+        column_check = db.session.execute(text(
+            "SELECT column_name FROM information_schema.columns WHERE table_name='food_entries' AND column_name='user_id'"
+        ))
+        user_id_exists = column_check.fetchone() is not None
+        
+        if not user_id_exists:
+            logging.info("user_id column missing in food_entries, adding it...")
+            
+            # First, check if there are existing records
+            record_count = db.session.execute(text("SELECT COUNT(*) FROM food_entries")).scalar() or 0
+            logging.info(f"Found {record_count} existing records in food_entries")
+            
+            # Add the user_id column
+            db.session.execute(text("ALTER TABLE food_entries ADD COLUMN user_id INTEGER"))
+            
+            if record_count > 0:
+                # If there are existing records, we need to handle them
+                # First, get the first user ID from users table
+                first_user = db.session.execute(text("SELECT id FROM users LIMIT 1")).fetchone()
+                if first_user:
+                    first_user_id = first_user[0]
+                    logging.info(f"Assigning existing food entries to user_id: {first_user_id}")
+                    
+                    # Update existing records to point to the first user
+                    db.session.execute(text(
+                        "UPDATE food_entries SET user_id = :user_id WHERE user_id IS NULL"
+                    ), {'user_id': first_user_id})
+                else:
+                    # No users exist, create a default user
+                    logging.info("No users found, creating default user for food entries...")
+                    default_password_hash = 'pbkdf2:sha256:600000$default$c8c1a3d4e5f6789abc123def456789abc123def456789abc123def456789abc'
+                    db.session.execute(text(
+                        "INSERT INTO users (username, password_hash, created_at) VALUES ('admin', :password_hash, NOW())"
+                    ), {'password_hash': default_password_hash})
+                    
+                    # Get the new user ID
+                    new_user = db.session.execute(text("SELECT id FROM users WHERE username = 'admin'")).fetchone()
+                    if new_user:
+                        new_user_id = new_user[0]
+                        db.session.execute(text(
+                            "UPDATE food_entries SET user_id = :user_id WHERE user_id IS NULL"
+                        ), {'user_id': new_user_id})
+            
+            # Make the column NOT NULL after updating existing records
+            db.session.execute(text("ALTER TABLE food_entries ALTER COLUMN user_id SET NOT NULL"))
+            
+            # Add foreign key constraint
+            try:
+                db.session.execute(text(
+                    "ALTER TABLE food_entries ADD CONSTRAINT fk_food_entries_user_id FOREIGN KEY (user_id) REFERENCES users(id)"
+                ))
+            except Exception as fk_error:
+                logging.warning(f"Could not add foreign key constraint to food_entries: {fk_error}")
+            
+            db.session.commit()
+            logging.info("user_id column added to food_entries successfully")
+            return True
+        else:
+            logging.info("food_entries table already has user_id column")
+            return False
+            
+    except Exception as e:
+        logging.error(f"Error during food_entries migration: {str(e)}")
+        db.session.rollback()
+        raise
+
 def migrate_user_profile_table():
     """Migrate user_profile table to add missing columns"""
     try:
@@ -415,6 +500,9 @@ def check_and_migrate_schema():
         # Ensure basic tables exist
         ensure_tables_exist()
         
+        # Migrate food_entries table if needed
+        migrate_food_entries_table()
+        
         # Migrate user_profile table if needed
         migrate_user_profile_table()
         
@@ -428,9 +516,10 @@ def check_and_migrate_schema():
 # Инициализируем базу данных при загрузке модуля
 try:
     logging.info("Attempting initial database setup...")
-    init_database()
-    # Проверяем и мигрируем схему
-    check_and_migrate_schema()
+    with app.app_context():
+        init_database()
+        # Проверяем и мигрируем схему
+        check_and_migrate_schema()
 except Exception as e:
     logging.error(f"Failed to initialize database on startup: {str(e)}")
 
@@ -518,7 +607,10 @@ def logout():
 def index():
     try:
         # Проверяем существование таблиц перед обращением к ним
-        check_and_migrate_schema()
+        try:
+            check_and_migrate_schema()
+        except Exception as migration_error:
+            logging.warning(f"Migration check failed, continuing anyway: {migration_error}")
         
         # Принудительное обновление сессии для получения свежих данных
         db.session.expire_all()
@@ -1420,42 +1512,81 @@ def check_schema():
     """Check database schema status"""
     try:
         from sqlalchemy import text
+        schema_status = {}
+        
+        # Check if users table exists
+        users_table_check = db.session.execute(text(
+            "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'users')"
+        ))
+        schema_status['users_table_exists'] = users_table_check.scalar()
+        
+        # Check if food_entries table exists
+        food_entries_table_check = db.session.execute(text(
+            "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'food_entries')"
+        ))
+        food_entries_table_exists = food_entries_table_check.scalar()
+        schema_status['food_entries_table_exists'] = food_entries_table_exists
+        
+        if food_entries_table_exists:
+            # Check if user_id column exists in food_entries
+            food_entries_user_id_check = db.session.execute(text(
+                "SELECT column_name FROM information_schema.columns WHERE table_name='food_entries' AND column_name='user_id'"
+            ))
+            schema_status['food_entries_user_id_exists'] = food_entries_user_id_check.fetchone() is not None
+            
+            # Check record count in food_entries
+            food_entries_count = db.session.execute(text("SELECT COUNT(*) FROM food_entries")).scalar() or 0
+            schema_status['food_entries_count'] = food_entries_count
+        else:
+            schema_status['food_entries_user_id_exists'] = False
+            schema_status['food_entries_count'] = 0
         
         # Check if user_profile table exists
-        table_check = db.session.execute(text(
+        user_profile_table_check = db.session.execute(text(
             "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'user_profile')"
         ))
-        table_exists = table_check.scalar()
+        user_profile_table_exists = user_profile_table_check.scalar()
+        schema_status['user_profile_table_exists'] = user_profile_table_exists
         
-        if not table_exists:
+        if user_profile_table_exists:
+            # Check if user_id column exists in user_profile
+            user_profile_user_id_check = db.session.execute(text(
+                "SELECT column_name FROM information_schema.columns WHERE table_name='user_profile' AND column_name='user_id'"
+            ))
+            schema_status['user_profile_user_id_exists'] = user_profile_user_id_check.fetchone() is not None
+            
+            # Check record count in user_profile
+            user_profile_count = db.session.execute(text("SELECT COUNT(*) FROM user_profile")).scalar() or 0
+            schema_status['user_profile_count'] = user_profile_count
+        else:
+            schema_status['user_profile_user_id_exists'] = False
+            schema_status['user_profile_count'] = 0
+        
+        # Determine overall status
+        issues = []
+        
+        if not schema_status['food_entries_table_exists']:
+            issues.append('food_entries table missing')
+        elif not schema_status['food_entries_user_id_exists']:
+            issues.append('user_id column missing in food_entries table')
+        
+        if not schema_status['user_profile_table_exists']:
+            issues.append('user_profile table missing')
+        elif not schema_status['user_profile_user_id_exists']:
+            issues.append('user_id column missing in user_profile table')
+        
+        if issues:
             return jsonify({
                 'status': 'error',
-                'message': 'user_profile table does not exist',
-                'action': 'Run migration'
+                'message': f'Schema issues found: {", ".join(issues)}',
+                'action': 'Run migration',
+                'details': schema_status
             })
-        
-        # Check if user_id column exists
-        column_check = db.session.execute(text(
-            "SELECT column_name FROM information_schema.columns WHERE table_name='user_profile' AND column_name='user_id'"
-        ))
-        user_id_exists = column_check.fetchone() is not None
-        
-        if not user_id_exists:
-            return jsonify({
-                'status': 'error', 
-                'message': 'user_id column missing in user_profile table',
-                'action': 'Run migration'
-            })
-        
-        # Check record count
-        record_count = db.session.execute(text("SELECT COUNT(*) FROM user_profile")).scalar() or 0
         
         return jsonify({
             'status': 'ok',
-            'message': f'Schema is correct. Found {record_count} user profiles.',
-            'table_exists': table_exists,
-            'user_id_column_exists': user_id_exists,
-            'record_count': record_count
+            'message': f'Schema is correct. Found {schema_status["food_entries_count"]} food entries and {schema_status["user_profile_count"]} user profiles.',
+            'details': schema_status
         })
         
     except Exception as e:
@@ -1464,6 +1595,57 @@ def check_schema():
             'status': 'error',
             'message': f'Schema check failed: {str(e)}'
         }), 500
+
+@app.route('/migrate_all')
+def migrate_all_route():
+    """Comprehensive migration endpoint for all tables"""
+    try:
+        logging.info("Comprehensive migration requested")
+        
+        # Run all migrations
+        results = {
+            'schema_check': check_and_migrate_schema(),
+            'food_entries': False,
+            'user_profile': False
+        }
+        
+        messages = []
+        
+        if results['schema_check']:
+            messages.append('Общая миграция схемы выполнена успешно')
+        
+        success_count = sum(1 for result in results.values() if result)
+        
+        if success_count > 0:
+            flash(f'Миграция завершена! Выполнено {success_count} операций. {" | ".join(messages)}', 'success')
+        else:
+            flash('Миграция не требуется - все таблицы уже в порядке!', 'info')
+        
+        return redirect(url_for('index'))
+        
+    except Exception as e:
+        logging.error(f"Comprehensive migration failed: {str(e)}")
+        flash(f'Ошибка комплексной миграции: {str(e)}', 'error')
+        return redirect(url_for('index'))
+
+@app.route('/migrate_food_entries')
+def migrate_food_entries_route():
+    """Manual migration endpoint for food_entries table"""
+    try:
+        logging.info("Manual food_entries migration requested")
+        result = migrate_food_entries_table()
+        
+        if result:
+            flash('Миграция food_entries успешно выполнена!', 'success')
+        else:
+            flash('Миграция не требуется - таблица food_entries уже в порядке!', 'info')
+        
+        return redirect(url_for('index'))
+        
+    except Exception as e:
+        logging.error(f"Manual food_entries migration failed: {str(e)}")
+        flash(f'Ошибка миграции food_entries: {str(e)}', 'error')
+        return redirect(url_for('index'))
 
 @app.route('/migrate_user_profile')
 def migrate_user_profile_route():
