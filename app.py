@@ -315,10 +315,122 @@ def ensure_tables_exist():
         logging.error(f"Error checking table existence: {str(e)}")
         return False
 
+def migrate_user_profile_table():
+    """Migrate user_profile table to add missing columns"""
+    try:
+        from sqlalchemy import text
+        logging.info("Starting user_profile table migration...")
+        
+        # Check if user_profile table exists
+        table_check = db.session.execute(text(
+            "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'user_profile')"
+        ))
+        table_exists = table_check.scalar()
+        
+        if not table_exists:
+            logging.info("user_profile table doesn't exist, creating it...")
+            db.create_all()
+            logging.info("user_profile table created successfully")
+            return True
+        
+        # Check if user_id column exists
+        column_check = db.session.execute(text(
+            "SELECT column_name FROM information_schema.columns WHERE table_name='user_profile' AND column_name='user_id'"
+        ))
+        user_id_exists = column_check.fetchone() is not None
+        
+        if not user_id_exists:
+            logging.info("user_id column missing, adding it...")
+            
+            # First, check if there are existing records
+            record_count = db.session.execute(text("SELECT COUNT(*) FROM user_profile")).scalar() or 0
+            logging.info(f"Found {record_count} existing records in user_profile")
+            
+            # Add the user_id column
+            db.session.execute(text("ALTER TABLE user_profile ADD COLUMN user_id INTEGER"))
+            
+            if record_count > 0:
+                # If there are existing records, we need to handle them
+                # First, get the first user ID from users table
+                first_user = db.session.execute(text("SELECT id FROM users LIMIT 1")).fetchone()
+                if first_user:
+                    first_user_id = first_user[0]
+                    logging.info(f"Assigning existing profiles to user_id: {first_user_id}")
+                    
+                    # Update existing records to point to the first user
+                    db.session.execute(text(
+                        "UPDATE user_profile SET user_id = :user_id WHERE user_id IS NULL"
+                    ), {'user_id': first_user_id})
+                else:
+                    # No users exist, create a default user
+                    logging.info("No users found, creating default user...")
+                    db.session.execute(text(
+                        "INSERT INTO users (username, password_hash, created_at) VALUES ('admin', 'pbkdf2:sha256:600000$default$hash', NOW())"
+                    ))
+                    
+                    # Get the new user ID
+                    new_user = db.session.execute(text("SELECT id FROM users WHERE username = 'admin'")).fetchone()
+                    if new_user:
+                        new_user_id = new_user[0]
+                        db.session.execute(text(
+                            "UPDATE user_profile SET user_id = :user_id WHERE user_id IS NULL"
+                        ), {'user_id': new_user_id})
+            
+            # Make the column NOT NULL after updating existing records
+            db.session.execute(text("ALTER TABLE user_profile ALTER COLUMN user_id SET NOT NULL"))
+            
+            # Add foreign key constraint
+            try:
+                db.session.execute(text(
+                    "ALTER TABLE user_profile ADD CONSTRAINT fk_user_profile_user_id FOREIGN KEY (user_id) REFERENCES users(id)"
+                ))
+            except Exception as fk_error:
+                logging.warning(f"Could not add foreign key constraint: {fk_error}")
+            
+            # Add unique constraint
+            try:
+                db.session.execute(text(
+                    "ALTER TABLE user_profile ADD CONSTRAINT uq_user_profile_user_id UNIQUE (user_id)"
+                ))
+            except Exception as uq_error:
+                logging.warning(f"Could not add unique constraint: {uq_error}")
+            
+            db.session.commit()
+            logging.info("user_id column added successfully")
+            return True
+        else:
+            logging.info("user_profile table already has user_id column")
+            return False
+            
+    except Exception as e:
+        logging.error(f"Error during user_profile migration: {str(e)}")
+        db.session.rollback()
+        raise
+
+def check_and_migrate_schema():
+    """Check database schema and perform necessary migrations"""
+    try:
+        logging.info("Checking database schema...")
+        
+        # Ensure basic tables exist
+        ensure_tables_exist()
+        
+        # Migrate user_profile table if needed
+        migrate_user_profile_table()
+        
+        logging.info("Schema check completed successfully")
+        return True
+        
+    except Exception as e:
+        logging.error(f"Schema migration failed: {str(e)}")
+        return False
+
 # Инициализируем базу данных при загрузке модуля
 try:
     logging.info("Attempting initial database setup...")
     init_database()
+    # Проверяем и мигрируем схему
+    check_and_migrate_schema()
 except Exception as e:
     logging.error(f"Failed to initialize database on startup: {str(e)}")
 
@@ -406,7 +518,7 @@ def logout():
 def index():
     try:
         # Проверяем существование таблиц перед обращением к ним
-        ensure_tables_exist()
+        check_and_migrate_schema()
         
         # Принудительное обновление сессии для получения свежих данных
         db.session.expire_all()
@@ -1302,6 +1414,75 @@ def load_mega_products():
         logging.error(f"Error loading mega products: {str(e)}")
         flash(f'Ошибка при добавлении мега-продуктов: {str(e)}', 'error')
         return redirect(url_for('products'))
+
+@app.route('/check_schema')
+def check_schema():
+    """Check database schema status"""
+    try:
+        from sqlalchemy import text
+        
+        # Check if user_profile table exists
+        table_check = db.session.execute(text(
+            "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'user_profile')"
+        ))
+        table_exists = table_check.scalar()
+        
+        if not table_exists:
+            return jsonify({
+                'status': 'error',
+                'message': 'user_profile table does not exist',
+                'action': 'Run migration'
+            })
+        
+        # Check if user_id column exists
+        column_check = db.session.execute(text(
+            "SELECT column_name FROM information_schema.columns WHERE table_name='user_profile' AND column_name='user_id'"
+        ))
+        user_id_exists = column_check.fetchone() is not None
+        
+        if not user_id_exists:
+            return jsonify({
+                'status': 'error', 
+                'message': 'user_id column missing in user_profile table',
+                'action': 'Run migration'
+            })
+        
+        # Check record count
+        record_count = db.session.execute(text("SELECT COUNT(*) FROM user_profile")).scalar() or 0
+        
+        return jsonify({
+            'status': 'ok',
+            'message': f'Schema is correct. Found {record_count} user profiles.',
+            'table_exists': table_exists,
+            'user_id_column_exists': user_id_exists,
+            'record_count': record_count
+        })
+        
+    except Exception as e:
+        logging.error(f"Schema check failed: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'message': f'Schema check failed: {str(e)}'
+        }), 500
+
+@app.route('/migrate_user_profile')
+def migrate_user_profile_route():
+    """Manual migration endpoint for user_profile table"""
+    try:
+        logging.info("Manual user_profile migration requested")
+        result = migrate_user_profile_table()
+        
+        if result:
+            flash('Миграция user_profile успешно выполнена!', 'success')
+        else:
+            flash('Миграция не требуется - таблица уже в порядке!', 'info')
+        
+        return redirect(url_for('profile'))
+        
+    except Exception as e:
+        logging.error(f"Manual migration failed: {str(e)}")
+        flash(f'Ошибка миграции: {str(e)}', 'error')
+        return redirect(url_for('index'))
 
 @app.route('/init_db')
 def initialize_database():
