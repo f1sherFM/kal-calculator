@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Регистрация в КалькКал{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white text-center">
+                <h4 class="mb-0">
+                    <i class="fas fa-user-plus"></i> Регистрация
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Логин *</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-user"></i>
+                            </span>
+                            <input type="text" class="form-control" name="username" id="username" 
+                                   required minlength="3" placeholder="Минимум 3 символа">
+                        </div>
+                        <div class="form-text">Логин должен быть уникальным, минимум 3 символа</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email (необязательно)</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-envelope"></i>
+                            </span>
+                            <input type="email" class="form-control" name="email" id="email" 
+                                   placeholder="your@email.com">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Пароль *</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-lock"></i>
+                            </span>
+                            <input type="password" class="form-control" name="password" id="password" 
+                                   required minlength="4" placeholder="Минимум 4 символа">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="confirm_password" class="form-label">Подтверждение пароля *</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-lock"></i>
+                            </span>
+                            <input type="password" class="form-control" name="confirm_password" id="confirm_password" 
+                                   required minlength="4" placeholder="Повторите пароль">
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="fas fa-user-plus"></i> Создать аккаунт
+                        </button>
+                    </div>
+                </form>
+                
+                <hr>
+                
+                <div class="text-center">
+                    <p class="mb-0">Уже есть аккаунт?</p>
+                    <a href="{{ url_for('login') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-sign-in-alt"></i> Войти
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center mt-4">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h6 class="text-success">
+                        <i class="fas fa-heart"></i> Добро пожаловать в КалькКал!
+                    </h6>
+                    <p class="small text-muted mb-0">
+                        После регистрации вы сможете:
+                    </p>
+                    <ul class="small text-muted text-start mt-2">
+                        <li>Отслеживать потребление калорий</li>
+                        <li>Вести дневник питания</li>
+                        <li>Настроить персональные цели</li>
+                        <li>Просматривать статистику</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Проверка совпадения паролей
+document.getElementById('confirm_password').addEventListener('input', function() {
+    const password = document.getElementById('password').value;
+    const confirmPassword = this.value;
+    
+    if (password !== confirmPassword) {
+        this.setCustomValidity('Пароли не совпадают');
+    } else {
+        this.setCustomValidity('');
+    }
+});
+</script>
+{% endblock %}
