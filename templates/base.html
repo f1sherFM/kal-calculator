@@ -73,6 +73,62 @@
         main {
             flex: 1;
         }
+        
+        /* Modern Toast Notifications */
+        .modern-toast {
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            border: none;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            margin-bottom: 10px;
+            min-width: 350px;
+            animation: slideInRight 0.4s ease-out;
+        }
+        
+        .toast-success {
+            background: linear-gradient(135deg, rgba(40, 167, 69, 0.95), rgba(25, 135, 84, 0.95));
+            color: white;
+        }
+        
+        .toast-error {
+            background: linear-gradient(135deg, rgba(220, 53, 69, 0.95), rgba(197, 48, 62, 0.95));
+            color: white;
+        }
+        
+        .toast-info {
+            background: linear-gradient(135deg, rgba(13, 110, 253, 0.95), rgba(10, 88, 202, 0.95));
+            color: white;
+        }
+        
+        .modern-toast .toast-header {
+            background: transparent;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            color: inherit;
+        }
+        
+        .modern-toast .toast-body {
+            background: transparent;
+            font-weight: 500;
+        }
+        
+        .modern-toast .btn-close {
+            filter: invert(1);
+        }
+        
+        .toast-icon {
+            font-size: 1.2rem;
+        }
+        
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
     </style>
 </head>
 <body class="bg-light">
@@ -150,16 +206,43 @@
     </nav>
 
     <main class="container mt-4">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
+        <!-- Toast Container -->
+        <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1055;">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="toast show modern-toast {{ 'toast-success' if category == 'success' else 'toast-error' if category == 'error' else 'toast-info' }}" 
+                             role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="false">
+                            <div class="toast-header">
+                                <div class="toast-icon me-2">
+                                    {% if category == 'success' %}
+                                        <i class="fas fa-check-circle text-success"></i>
+                                    {% elif category == 'error' %}
+                                        <i class="fas fa-exclamation-circle text-danger"></i>
+                                    {% else %}
+                                        <i class="fas fa-info-circle text-info"></i>
+                                    {% endif %}
+                                </div>
+                                <strong class="me-auto">
+                                    {% if category == 'success' %}
+                                        Успешно
+                                    {% elif category == 'error' %}
+                                        Ошибка
+                                    {% else %}
+                                        Уведомление
+                                    {% endif %}
+                                </strong>
+                                <small class="text-muted">сейчас</small>
+                                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Закрыть"></button>
+                            </div>
+                            <div class="toast-body">
+                                {{ message }}
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
 
         {% block content %}{% endblock %}
     </main>
@@ -202,6 +285,19 @@
         
         // Отслеживание сообщений об успешном добавлении
         document.addEventListener('DOMContentLoaded', function() {
+            // Initialize modern toasts
+            const toasts = document.querySelectorAll('.modern-toast');
+            toasts.forEach(toast => {
+                // Auto-hide success and info toasts after 5 seconds
+                if (toast.classList.contains('toast-success') || toast.classList.contains('toast-info')) {
+                    setTimeout(() => {
+                        toast.classList.remove('show');
+                        setTimeout(() => toast.remove(), 300);
+                    }, 5000);
+                }
+                // Error toasts stay until manually closed
+            });
+            
             // Обновляем все ссылки для предотвращения кэширования
             const links = document.querySelectorAll('a[href*="products"], a[href*="index"], a[href*="add_food"]');
             links.forEach(link => {
