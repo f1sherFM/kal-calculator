@@ -1,97 +1,146 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-12">
-        <h2>
-            <i class="fas fa-list"></i> База продуктов
-        </h2>
+<!-- Hero Section -->
+<div class="hero-section mb-5">
+    <div class="hero-content text-center">
+        <h1 class="hero-title animate-fade-in">
+            <i class="fas fa-database hero-icon"></i> 
+            База продуктов
+        </h1>
+        <p class="hero-subtitle animate-fade-in-delay">
+            <i class="fas fa-search"></i> Найдите и добавьте продукты в свой дневник
+        </p>
     </div>
 </div>
 
 <!-- Фильтры по категориям -->
-<div class="row mb-3">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h6 class="mb-0"><i class="fas fa-filter"></i> Фильтр по категориям</h6>
+<div class="filters-section mb-4">
+    <div class="filters-card">
+        <div class="filters-header">
+            <h6 class="filters-title">
+                <i class="fas fa-filter"></i> Фильтр по категориям
+            </h6>
+        </div>
+        <div class="filters-grid">
+            <button class="filter-btn meat-btn" onclick="filterByCategory('Мясо и птица')">
+                <i class="fas fa-drumstick-bite"></i>
+                <span>Мясо и птица</span>
+            </button>
+            
+            <button class="filter-btn vegetables-btn" onclick="filterByCategory('Овощи')">
+                <i class="fas fa-carrot"></i>
+                <span>Овощи</span>
+            </button>
+            
+            <button class="filter-btn fruits-btn" onclick="filterByCategory('Фрукты и ягоды')">
+                <i class="fas fa-apple-alt"></i>
+                <span>Фрукты и ягоды</span>
+            </button>
+            
+            <button class="filter-btn dairy-btn" onclick="filterByCategory('Молочные продукты')">
+                <i class="fas fa-cheese"></i>
+                <span>Молочные продукты</span>
+            </button>
+            
+            <button class="filter-btn grains-btn" onclick="filterByCategory('Крупы и злаки')">
+                <i class="fas fa-seedling"></i>
+                <span>Крупы и злаки</span>
+            </button>
+            
+            <button class="filter-btn bakery-btn" onclick="filterByCategory('Хлеб и выпечка')">
+                <i class="fas fa-bread-slice"></i>
+                <span>Хлеб и выпечка</span>
+            </button>
+            
+            <button class="filter-btn seafood-btn" onclick="filterByCategory('Рыба и морепродукты')">
+                <i class="fas fa-fish"></i>
+                <span>Рыба и морепродукты</span>
+            </button>
+            
+            <button class="filter-btn nuts-btn" onclick="filterByCategory('Орехи и семена')">
+                <i class="fas fa-acorn"></i>
+                <span>Орехи и семена</span>
+            </button>
+            
+            <button class="filter-btn legumes-btn" onclick="filterByCategory('Бобовые')">
+                <i class="fas fa-leaf"></i>
+                <span>Бобовые</span>
+            </button>
+            
+            <button class="filter-btn oils-btn" onclick="filterByCategory('Масла и жиры')">
+                <i class="fas fa-tint"></i>
+                <span>Масла и жиры</span>
+            </button>
+            
+            <button class="filter-btn sweets-btn" onclick="filterByCategory('Сладости')">
+                <i class="fas fa-candy-cane"></i>
+                <span>Сладости</span>
+            </button>
+            
+            <button class="filter-btn drinks-btn" onclick="filterByCategory('Напитки')">
+                <i class="fas fa-glass-whiskey"></i>
+                <span>Напитки</span>
+            </button>
+            
+            <button class="filter-btn ready-btn" onclick="filterByCategory('Готовые блюда')">
+                <i class="fas fa-utensils"></i>
+                <span>Готовые блюда</span>
+            </button>
+            
+            <button class="filter-btn other-btn" onclick="filterByCategory('Прочее')">
+                <i class="fas fa-question"></i>
+                <span>Прочее</span>
+            </button>
+            
+            <button class="filter-btn clear-btn" onclick="clearFilters()">
+                <i class="fas fa-times"></i>
+                <span>Очистить</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Поиск и добавление -->
+<div class="search-section mb-4">
+    <div class="search-card">
+        <div class="row align-items-center">
+            <div class="col-lg-8 mb-3 mb-lg-0">
+                <form method="GET" class="search-form">
+                    <div class="search-input-wrapper">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" class="search-input" name="search" 
+                               value="{{ search }}" placeholder="Поиск продуктов...">
+                        <input type="hidden" name="category" value="{{ category }}">
+                        <button type="submit" class="search-btn">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </form>
             </div>
-            <div class="card-body py-2">
-                <div class="row">
-                    <div class="col-md-2 mb-2">
-                        <button class="btn btn-outline-primary w-100 btn-sm" onclick="filterByCategory('Мясо и птица')">
-                            <i class="fas fa-drumstick-bite"></i> Мясо и птица
+            <div class="col-lg-4">
+                <div class="action-buttons">
+                    <a href="{{ url_for('add_product') }}" class="btn btn-add">
+                        <i class="fas fa-plus"></i> Добавить продукт
+                    </a>
+                    <div class="dropdown">
+                        <button type="button" class="btn btn-manage dropdown-toggle" data-bs-toggle="dropdown">
+                            <i class="fas fa-tools"></i> Управление
                         </button>
-                    </div>
-                    <div class="col-md-2 mb-2">
-                        <button class="btn btn-outline-success w-100 btn-sm" onclick="filterByCategory('Овощи')">
-                            <i class="fas fa-carrot"></i> Овощи
-                        </button>
-                    </div>
-                    <div class="col-md-2 mb-2">
-                        <button class="btn btn-outline-warning w-100 btn-sm" onclick="filterByCategory('Фрукты и ягоды')">
-                            <i class="fas fa-apple-alt"></i> Фрукты и ягоды
-                        </button>
-                    </div>
-                    <div class="col-md-2 mb-2">
-                        <button class="btn btn-outline-info w-100 btn-sm" onclick="filterByCategory('Молочные продукты')">
-                            <i class="fas fa-cheese"></i> Молочные продукты
-                        </button>
-                    </div>
-                    <div class="col-md-2 mb-2">
-                        <button class="btn btn-outline-secondary w-100 btn-sm" onclick="filterByCategory('Крупы и злаки')">
-                            <i class="fas fa-seedling"></i> Крупы и злаки
-                        </button>
-                    </div>
-                    <div class="col-md-2 mb-2">
-                        <button class="btn btn-outline-danger w-100 btn-sm" onclick="filterByCategory('Хлеб и выпечка')">
-                            <i class="fas fa-bread-slice"></i> Хлеб и выпечка
-                        </button>
-                    </div>
-                    <div class="col-md-2 mb-2">
-                        <button class="btn btn-outline-primary w-100 btn-sm" onclick="filterByCategory('Рыба и морепродукты')">
-                            <i class="fas fa-fish"></i> Рыба и морепродукты
-                        </button>
-                    </div>
-                    <div class="col-md-2 mb-2">
-                        <button class="btn btn-outline-warning w-100 btn-sm" onclick="filterByCategory('Орехи и семена')">
-                            <i class="fas fa-acorn"></i> Орехи и семена
-                        </button>
-                    </div>
-                    <div class="col-md-2 mb-2">
-                        <button class="btn btn-outline-success w-100 btn-sm" onclick="filterByCategory('Бобовые')">
-                            <i class="fas fa-leaf"></i> Бобовые
-                        </button>
-                    </div>
-                    <div class="col-md-2 mb-2">
-                        <button class="btn btn-outline-info w-100 btn-sm" onclick="filterByCategory('Масла и жиры')">
-                            <i class="fas fa-tint"></i> Масла и жиры
-                        </button>
-                    </div>
-                    <div class="col-md-2 mb-2">
-                        <button class="btn btn-outline-danger w-100 btn-sm" onclick="filterByCategory('Сладости')">
-                            <i class="fas fa-candy-cane"></i> Сладости
-                        </button>
-                    </div>
-                    <div class="col-md-2 mb-2">
-                        <button class="btn btn-outline-primary w-100 btn-sm" onclick="filterByCategory('Напитки')">
-                            <i class="fas fa-glass-whiskey"></i> Напитки
-                        </button>
-                    </div>
-                    <div class="col-md-2 mb-2">
-                        <button class="btn btn-outline-secondary w-100 btn-sm" onclick="filterByCategory('Готовые блюда')">
-                            <i class="fas fa-utensils"></i> Готовые блюда
-                        </button>
-                    </div>
-                    <div class="col-md-2 mb-2">
-                        <button class="btn btn-outline-warning w-100 btn-sm" onclick="filterByCategory('Прочее')">
-                            <i class="fas fa-question"></i> Прочее
-                        </button>
-                    </div>
-                    <div class="col-md-2 mb-2">
-                        <button class="btn btn-outline-dark w-100 btn-sm" onclick="clearFilters()">
-                            <i class="fas fa-times"></i> Все
-                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('show_duplicates') }}">
+                                    <i class="fas fa-search text-warning"></i> Показать дубликаты
+                                    <span id="duplicate-badge" class="badge bg-danger ms-1" style="display: none;">0</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="{{ url_for('cleanup_duplicates') }}" 
+                                   onclick="return confirm('Удалить все дубликаты? Это действие необратимо!')">
+                                    <i class="fas fa-trash-alt"></i> Очистить дубликаты
+                                </a>
+                            </li>
+                        </ul>
                     </div>
                 </div>
             </div>
@@ -99,202 +148,778 @@
     </div>
 </div>
 
-<!-- Поиск и добавление -->
-<div class="row mb-4">
-    <div class="col-md-8">
-        <form method="GET" class="d-flex">
-            <input type="text" class="form-control me-2" name="search" 
-                   value="{{ search }}" placeholder="Поиск продуктов...">
-            <input type="hidden" name="category" value="{{ category }}">
-            <button type="submit" class="btn btn-outline-primary">
-                <i class="fas fa-search"></i>
-            </button>
-        </form>
-    </div>
-    <div class="col-md-4 text-end">
-        <div class="btn-group" role="group">
-            <a href="{{ url_for('add_product') }}" class="btn btn-success">
-                <i class="fas fa-plus"></i> Добавить продукт
-            </a>
-            <div class="btn-group" role="group">
-                <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
-                    <i class="fas fa-tools"></i> Управление
-                </button>
-                <ul class="dropdown-menu">
-                    <li>
-                        <a class="dropdown-item" href="{{ url_for('show_duplicates') }}">
-                            <i class="fas fa-search text-warning"></i> Показать дубликаты
-                            <span id="duplicate-badge" class="badge bg-danger ms-1" style="display: none;">0</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a class="dropdown-item text-danger" href="{{ url_for('cleanup_duplicates') }}" 
-                           onclick="return confirm('Удалить все дубликаты? Это действие необратимо!')">
-                            <i class="fas fa-trash-alt"></i> Очистить дубликаты
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </div>
-</div>
-
 <!-- Список продуктов -->
-<div class="card">
-    <div class="card-body">
-        {% if products.items %}
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Название</th>
-                            <th>Категория</th>
-                            <th>Калории/100г</th>
-                            <th>Белки</th>
-                            <th>Жиры</th>
-                            <th>Углеводы</th>
-                            <th>Действия</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for product in products.items %}
-                        <tr class="product-row" 
-                            data-product-id="{{ product.id }}" 
-                            data-created="{{ product.created_at.strftime('%Y-%m-%d %H:%M:%S') if product.created_at else '' }}">
-                            <td>
-                                <strong>{{ product.name }}</strong>
-                                {% if product.created_at and (product.created_at.date() == today) %}
-                                    <span class="badge bg-success ms-2 new-product-badge">
-                                        <i class="fas fa-star"></i> Новый!
-                                    </span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <span class="badge bg-secondary">{{ product.category or 'Прочее' }}</span>
-                            </td>
-                            <td>
-                                <span class="badge bg-primary">{{ product.calories_per_100g }} ккал</span>
-                            </td>
-                            <td>{{ "%.1f"|format(product.protein) }}г</td>
-                            <td>{{ "%.1f"|format(product.fat) }}г</td>
-                            <td>{{ "%.1f"|format(product.carbs) }}г</td>
-                            <td>
-                                <a href="{{ url_for('add_food') }}?product={{ product.id }}" 
-                                   class="btn btn-sm btn-outline-primary" title="Добавить в дневник">
-                                    <i class="fas fa-plus"></i>
-                                </a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+<div class="products-container">
+    {% if products.items %}
+        <div class="products-grid">
+            {% for product in products.items %}
+            <div class="product-card-item" 
+                 data-product-id="{{ product.id }}" 
+                 data-created="{{ product.created_at.strftime('%Y-%m-%d %H:%M:%S') if product.created_at else '' }}">
+                <div class="product-card-modern">
+                    <div class="product-card-header">
+                        <div class="product-info">
+                            <h5 class="product-name">{{ product.name }}</h5>
+                            {% if product.created_at and (product.created_at.date() == today) %}
+                                <span class="new-product-badge">
+                                    <i class="fas fa-star"></i> Новый!
+                                </span>
+                            {% endif %}
+                        </div>
+                        <div class="product-category">
+                            <span class="category-badge">{{ product.category or 'Прочее' }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="product-card-body">
+                        <div class="nutrition-grid">
+                            <div class="nutrition-item calories">
+                                <div class="nutrition-icon">
+                                    <i class="fas fa-fire"></i>
+                                </div>
+                                <div class="nutrition-value">
+                                    <span class="value">{{ product.calories_per_100g }}</span>
+                                    <span class="unit">ккал</span>
+                                </div>
+                                <div class="nutrition-label">/100г</div>
+                            </div>
+                            
+                            <div class="macros-grid">
+                                <div class="macro-item protein">
+                                    <i class="fas fa-dumbbell"></i>
+                                    <span>{{ "%.1f"|format(product.protein) }}г</span>
+                                    <small>Белки</small>
+                                </div>
+                                <div class="macro-item fat">
+                                    <i class="fas fa-tint"></i>
+                                    <span>{{ "%.1f"|format(product.fat) }}г</span>
+                                    <small>Жиры</small>
+                                </div>
+                                <div class="macro-item carbs">
+                                    <i class="fas fa-bread-slice"></i>
+                                    <span>{{ "%.1f"|format(product.carbs) }}г</span>
+                                    <small>Углеводы</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="product-card-footer">
+                        <a href="{{ url_for('add_food') }}?product={{ product.id }}" 
+                           class="btn-add-to-diary" title="Добавить в дневник">
+                            <i class="fas fa-plus"></i>
+                            <span>Добавить</span>
+                        </a>
+                    </div>
+                </div>
             </div>
+            {% endfor %}
+        </div>
             
             <!-- Пагинация -->
             {% if products.pages > 1 %}
-            <nav aria-label="Навигация по страницам">
-                <ul class="pagination justify-content-center">
-                    {% if products.has_prev %}
-                        <li class="page-item">
-                            <a class="page-link" href="{{ url_for('products', page=products.prev_num, search=search, category=category) }}">
-                                <i class="fas fa-chevron-left"></i>
-                            </a>
-                        </li>
-                    {% endif %}
-                    
-                    {% for page_num in products.iter_pages() %}
-                        {% if page_num %}
-                            {% if page_num != products.page %}
-                                <li class="page-item">
-                                    <a class="page-link" href="{{ url_for('products', page=page_num, search=search, category=category) }}">
-                                        {{ page_num }}
-                                    </a>
-                                </li>
-                            {% else %}
-                                <li class="page-item active">
-                                    <span class="page-link">{{ page_num }}</span>
-                                </li>
-                            {% endif %}
-                        {% else %}
-                            <li class="page-item disabled">
-                                <span class="page-link">...</span>
+            <div class="pagination-section">
+                <nav aria-label="Навигация по страницам">
+                    <ul class="pagination justify-content-center">
+                        {% if products.has_prev %}
+                            <li class="page-item">
+                                <a class="page-link modern-page-link" href="{{ url_for('products', page=products.prev_num, search=search, category=category) }}">
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
                             </li>
                         {% endif %}
-                    {% endfor %}
-                    
-                    {% if products.has_next %}
-                        <li class="page-item">
-                            <a class="page-link" href="{{ url_for('products', page=products.next_num, search=search, category=category) }}">
-                                <i class="fas fa-chevron-right"></i>
-                            </a>
-                        </li>
-                    {% endif %}
-                </ul>
-            </nav>
-            {% endif %}
-            
-            <!-- Информация о количестве -->
-            <div class="text-center text-muted">
-                Показано {{ products.items|length }} из {{ products.total }} продуктов
+                        
+                        {% for page_num in products.iter_pages() %}
+                            {% if page_num %}
+                                {% if page_num != products.page %}
+                                    <li class="page-item">
+                                        <a class="page-link modern-page-link" href="{{ url_for('products', page=page_num, search=search, category=category) }}">
+                                            {{ page_num }}
+                                        </a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item active">
+                                        <span class="page-link modern-page-link active">{{ page_num }}</span>
+                                    </li>
+                                {% endif %}
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link modern-page-link">…</span>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if products.has_next %}
+                            <li class="page-item">
+                                <a class="page-link modern-page-link" href="{{ url_for('products', page=products.next_num, search=search, category=category) }}">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
             </div>
-            
+            {% endif %}
         {% else %}
-            <div class="text-center py-5">
-                <i class="fas fa-search fa-3x text-muted mb-3"></i>
-                <h4 class="text-muted">
-                    {% if search %}
-                        Продукты не найдены
-                    {% else %}
-                        База продуктов пуста
-                    {% endif %}
-                </h4>
-                {% if search %}
-                    <p class="text-muted">
-                        По запросу "{{ search }}" ничего не найдено.<br>
-                        Попробуйте изменить поисковый запрос или 
-                        <a href="{{ url_for('add_product') }}">добавьте новый продукт</a>.
-                    </p>
-                    <a href="{{ url_for('products') }}" class="btn btn-primary">
-                        Показать все продукты
-                    </a>
-                {% else %}
-                    <p class="text-muted">
-                        Начните добавлять продукты в базу данных.
-                    </p>
-                    <a href="{{ url_for('add_product') }}" class="btn btn-success">
-                        <i class="fas fa-plus"></i> Добавить первый продукт
-                    </a>
-                {% endif %}
+            <div class="no-products">
+                <div class="no-products-icon">
+                    <i class="fas fa-search"></i>
+                </div>
+                <h4>Продукты не найдены</h4>
+                <p>Попробуйте изменить критерии поиска или добавьте новый продукт</p>
+                <a href="{{ url_for('add_product') }}" class="btn btn-add">
+                    <i class="fas fa-plus"></i> Добавить продукт
+                </a>
             </div>
         {% endif %}
-    </div>
 </div>
 
 <!-- Активные фильтры -->
 {% if category or search %}
-<div class="row mb-3">
-    <div class="col-12">
-        <div class="alert alert-info d-flex align-items-center justify-content-between">
-            <div>
-                <i class="fas fa-filter me-2"></i>
-                Активные фильтры:
-                {% if category %}
-                    <span class="badge bg-primary me-2">Категория: {{ category }}</span>
-                {% endif %}
-                {% if search %}
-                    <span class="badge bg-secondary me-2">Поиск: {{ search }}</span>
-                {% endif %}
-            </div>
-            <a href="{{ url_for('products') }}" class="btn btn-sm btn-outline-secondary">
-                <i class="fas fa-times"></i> Сбросить
-            </a>
+<div class="active-filters mb-3">
+    <div class="active-filters-card">
+        <div class="filters-info">
+            <i class="fas fa-filter"></i>
+            Активные фильтры:
+            {% if category %}
+                <span class="filter-tag category-tag">Категория: {{ category }}</span>
+            {% endif %}
+            {% if search %}
+                <span class="filter-tag search-tag">Поиск: {{ search }}</span>
+            {% endif %}
         </div>
+        <a href="{{ url_for('products') }}" class="btn-clear-filters">
+            <i class="fas fa-times"></i> Сбросить
+        </a>
+    </div>
+</div>
+{% endif %}
+
+<!-- Информация о количестве -->
+{% if products.items %}
+<div class="products-info mb-3">
+    <div class="products-count">
+        <i class="fas fa-info-circle"></i>
+        Показано {{ products.items|length }} из {{ products.total }} продуктов
     </div>
 </div>
 {% endif %}
 {% endblock %}
 
 {% block scripts %}
+<style>
+/* Modern Products Page Styles */
+
+/* Hero Section */
+.hero-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 20px;
+    padding: 40px 30px;
+    position: relative;
+    overflow: hidden;
+    color: white;
+    margin-bottom: 40px;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+}
+
+.hero-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 15px;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+.hero-icon {
+    font-size: 3rem;
+    margin-right: 15px;
+    animation: pulse 2s infinite;
+}
+
+.hero-subtitle {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin-bottom: 0;
+}
+
+/* Filters Section */
+.filters-section {
+    margin-bottom: 30px;
+}
+
+.filters-card {
+    background: white;
+    border-radius: 20px;
+    padding: 25px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    border: 2px solid #f8f9fa;
+}
+
+.filters-header {
+    margin-bottom: 20px;
+}
+
+.filters-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin: 0;
+    display: flex;
+    align-items: center;
+}
+
+.filters-title i {
+    margin-right: 10px;
+    color: #667eea;
+}
+
+.filters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+}
+
+.filter-btn {
+    background: white;
+    border: 2px solid #e9ecef;
+    padding: 12px 16px;
+    border-radius: 12px;
+    color: #495057;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    font-weight: 500;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.filter-btn i {
+    margin-right: 8px;
+    font-size: 1rem;
+    width: 16px;
+}
+
+.filter-btn:hover {
+    border-color: #667eea;
+    background: #f0f4ff;
+    color: #495057;
+    text-decoration: none;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+}
+
+.filter-btn.active {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-color: #667eea;
+    color: white;
+}
+
+.filter-btn.clear-btn {
+    background: linear-gradient(135deg, #6c757d, #495057);
+    color: white;
+    border-color: #6c757d;
+}
+
+.filter-btn.clear-btn:hover {
+    background: linear-gradient(135deg, #5a6268, #343a40);
+    border-color: #5a6268;
+    color: white;
+}
+
+/* Search Section */
+.search-section {
+    margin-bottom: 30px;
+}
+
+.search-card {
+    background: white;
+    border-radius: 20px;
+    padding: 25px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.search-form {
+    position: relative;
+}
+
+.search-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: #f8f9fa;
+    border-radius: 12px;
+    border: 2px solid #e9ecef;
+    transition: all 0.3s ease;
+}
+
+.search-input-wrapper:focus-within {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.search-icon {
+    position: absolute;
+    left: 16px;
+    color: #6c757d;
+    z-index: 2;
+}
+
+.search-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 12px 16px 12px 45px;
+    font-size: 1rem;
+    outline: none;
+    border-radius: 12px;
+}
+
+.search-btn {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 0 10px 10px 0;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.search-btn:hover {
+    background: linear-gradient(135deg, #5a6fd8, #6842a0);
+}
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.btn-add {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-add:hover {
+    background: linear-gradient(135deg, #218838, #1fa180);
+    color: white;
+    text-decoration: none;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+.btn-manage {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-manage:hover {
+    background: #5a6268;
+    color: white;
+}
+
+/* Products Grid */
+.products-container {
+    margin-bottom: 30px;
+}
+
+.products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 25px;
+    margin-bottom: 30px;
+}
+
+.product-card-item {
+    position: relative;
+}
+
+.product-card-modern {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.product-card-modern:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+    border-color: #667eea;
+}
+
+.product-card-header {
+    padding: 20px;
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.product-info {
+    flex: 1;
+}
+
+.product-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin: 0 0 8px 0;
+    line-height: 1.3;
+}
+
+.new-product-badge {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    animation: newProductPulse 2s infinite;
+}
+
+@keyframes newProductPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+.product-category {
+    flex-shrink: 0;
+}
+
+.category-badge {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.product-card-body {
+    padding: 20px;
+    flex: 1;
+}
+
+.nutrition-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 15px;
+}
+
+.nutrition-item.calories {
+    background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+    color: white;
+    padding: 15px;
+    border-radius: 12px;
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.nutrition-icon {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+}
+
+.nutrition-value {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 4px;
+}
+
+.nutrition-value .value {
+    font-size: 1.8rem;
+    font-weight: 700;
+}
+
+.nutrition-value .unit {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.nutrition-label {
+    font-size: 0.8rem;
+    opacity: 0.8;
+    margin-top: 4px;
+}
+
+.macros-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.macro-item {
+    background: #f8f9fa;
+    padding: 12px 8px;
+    border-radius: 8px;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.macro-item:hover {
+    background: #e9ecef;
+    transform: translateY(-1px);
+}
+
+.macro-item i {
+    display: block;
+    font-size: 1.1rem;
+    margin-bottom: 4px;
+    color: #6c757d;
+}
+
+.macro-item.protein i { color: #e83e8c; }
+.macro-item.fat i { color: #fd7e14; }
+.macro-item.carbs i { color: #20c997; }
+
+.macro-item span {
+    display: block;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 2px;
+}
+
+.macro-item small {
+    color: #6c757d;
+    font-size: 0.75rem;
+}
+
+.product-card-footer {
+    padding: 20px;
+    background: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+}
+
+.btn-add-to-diary {
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.btn-add-to-diary:hover {
+    background: linear-gradient(135deg, #0056b3, #004085);
+    color: white;
+    text-decoration: none;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+/* No Products */
+.no-products {
+    text-align: center;
+    padding: 60px 20px;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.no-products-icon {
+    font-size: 4rem;
+    color: #6c757d;
+    margin-bottom: 20px;
+    opacity: 0.5;
+}
+
+.no-products h4 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+}
+
+.no-products p {
+    color: #6c757d;
+    margin-bottom: 25px;
+}
+
+/* Pagination */
+.pagination-section {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 2px solid #f8f9fa;
+}
+
+.modern-page-link {
+    border: 2px solid #e9ecef;
+    border-radius: 10px;
+    padding: 10px 15px;
+    margin: 0 3px;
+    color: #495057;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.modern-page-link:hover {
+    border-color: #667eea;
+    background: #f0f4ff;
+    color: #495057;
+    transform: translateY(-1px);
+}
+
+.modern-page-link.active {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-color: #667eea;
+    color: white;
+}
+
+/* Active Filters */
+.active-filters {
+    margin-bottom: 20px;
+}
+
+.active-filters-card {
+    background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
+    border-radius: 12px;
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-left: 4px solid #667eea;
+}
+
+.filters-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.filter-tag {
+    background: rgba(255,255,255,0.8);
+    color: #495057;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-left: 8px;
+}
+
+.btn-clear-filters {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-clear-filters:hover {
+    background: #c82333;
+    color: white;
+    text-decoration: none;
+}
+
+/* Products Info */
+.products-info {
+    text-align: center;
+}
+
+.products-count {
+    color: #6c757d;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+/* Animations */
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+    animation: fadeIn 1s ease forwards;
+}
+
+.animate-fade-in-delay {
+    animation: fadeIn 1s ease 0.3s forwards;
+    opacity: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .hero-title {
+        font-size: 2rem;
+    }
+    
+    .hero-icon {
+        font-size: 2.5rem;
+    }
+    
+    .filters-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+    
+    .products-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .action-buttons {
+        width: 100%;
+        justify-content: stretch;
+    }
+    
+    .btn-add {
+        flex: 1;
+        justify-content: center;
+    }
+    
+    .search-input-wrapper {
+        margin-bottom: 15px;
+    }
+    
+    .macros-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
 <script>
 function filterByCategory(category) {
     const url = new URL('/products', window.location.origin);
