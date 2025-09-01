@@ -3,69 +3,604 @@
 {% block title %}Вход в КалькКал{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6 col-lg-4">
-        <div class="card shadow-sm">
-            <div class="card-header bg-primary text-white text-center">
-                <h4 class="mb-0">
-                    <i class="fas fa-sign-in-alt"></i> Вход в систему
-                </h4>
-            </div>
-            <div class="card-body">
-                <form method="POST">
-                    <div class="mb-3">
-                        <label for="username" class="form-label">Логин</label>
-                        <div class="input-group">
-                            <span class="input-group-text">
-                                <i class="fas fa-user"></i>
-                            </span>
-                            <input type="text" class="form-control" name="username" id="username" 
-                                   required placeholder="Ваш логин">
+<!-- Hero Section -->
+<div class="login-hero mb-5">
+    <div class="hero-content text-center">
+        <h1 class="hero-title animate-fade-in">
+            <i class="fas fa-sign-in-alt hero-icon"></i> 
+            Добро пожаловать обратно!
+        </h1>
+        <p class="hero-subtitle animate-fade-in-delay">
+            <i class="fas fa-heart"></i> Войдите в свой аккаунт и продолжите отслеживание питания
+        </p>
+    </div>
+</div>
+
+<div class="login-container">
+    <div class="row justify-content-center">
+        <div class="col-lg-5 col-md-7 col-sm-9">
+            <!-- Login Form Card -->
+            <div class="login-card animate-slide-up">
+                <div class="login-header">
+                    <div class="login-avatar">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <h2 class="login-title">Вход в систему</h2>
+                    <p class="login-subtitle">Введите свои данные для входа</p>
+                </div>
+                
+                <div class="login-body">
+                    <form method="POST">
+                        <div class="form-group">
+                            <label for="username" class="form-label">
+                                <i class="fas fa-user label-icon"></i>
+                                Логин
+                            </label>
+                            <div class="input-wrapper">
+                                <div class="input-icon">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <input type="text" class="form-control modern-input" name="username" id="username" 
+                                       required placeholder="Введите ваш логин">
+                            </div>
                         </div>
+                        
+                        <div class="form-group">
+                            <label for="password" class="form-label">
+                                <i class="fas fa-lock label-icon"></i>
+                                Пароль
+                            </label>
+                            <div class="input-wrapper">
+                                <div class="input-icon">
+                                    <i class="fas fa-lock"></i>
+                                </div>
+                                <input type="password" class="form-control modern-input" name="password" id="password" 
+                                       required placeholder="Введите ваш пароль">
+                                <div class="password-toggle" onclick="togglePassword()">
+                                    <i class="fas fa-eye" id="toggleIcon"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="submit" class="btn-login">
+                                <div class="btn-content">
+                                    <i class="fas fa-sign-in-alt"></i>
+                                    <span>Войти в систему</span>
+                                </div>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="login-footer">
+                    <div class="divider">
+                        <span>или</span>
                     </div>
                     
-                    <div class="mb-3">
-                        <label for="password" class="form-label">Пароль</label>
-                        <div class="input-group">
-                            <span class="input-group-text">
-                                <i class="fas fa-lock"></i>
-                            </span>
-                            <input type="password" class="form-control" name="password" id="password" 
-                                   required placeholder="Ваш пароль">
-                        </div>
+                    <div class="register-section">
+                        <p class="register-text">Нет аккаунта?</p>
+                        <a href="{{ url_for('register') }}" class="btn-register">
+                            <i class="fas fa-user-plus"></i>
+                            <span>Создать аккаунт</span>
+                        </a>
                     </div>
-                    
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary btn-lg">
-                            <i class="fas fa-sign-in-alt"></i> Войти
-                        </button>
-                    </div>
-                </form>
-                
-                <hr>
-                
-                <div class="text-center">
-                    <p class="mb-0">Нет аккаунта?</p>
-                    <a href="{{ url_for('register') }}" class="btn btn-outline-primary">
-                        <i class="fas fa-user-plus"></i> Зарегистрироваться
-                    </a>
                 </div>
             </div>
-        </div>
-        
-        <div class="text-center mt-4">
-            <div class="card bg-light">
-                <div class="card-body">
-                    <h6 class="text-muted">
-                        <i class="fas fa-info-circle"></i> О приложении
-                    </h6>
-                    <p class="small text-muted mb-0">
-                        КалькКал - ваш персональный трекер калорий и питания. 
-                        Отслеживайте потребление калорий, достигайте ваших целей!
-                    </p>
+            
+            <!-- Info Card -->
+            <div class="info-card animate-slide-up" style="animation-delay: 0.2s">
+                <div class="info-content">
+                    <div class="info-icon">
+                        <i class="fas fa-info-circle"></i>
+                    </div>
+                    <div class="info-text">
+                        <h5>О приложении КалькКал</h5>
+                        <p>
+                            Ваш персональный трекер калорий и питания. 
+                            Отслеживайте потребление калорий и достигайте своих целей!
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="features-list">
+                    <div class="feature-item">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Аналитика питания</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-database"></i>
+                        <span>База продуктов</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-target"></i>
+                        <span>Отслеживание целей</span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+/* Modern Login Page Styles */
+
+/* Hero Section */
+.login-hero {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 20px;
+    padding: 50px 30px;
+    position: relative;
+    overflow: hidden;
+    color: white;
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.hero-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 15px;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+.hero-icon {
+    font-size: 3rem;
+    margin-right: 15px;
+    animation: pulse 2s infinite;
+}
+
+.hero-subtitle {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin: 0;
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.5;
+}
+
+/* Login Container */
+.login-container {
+    margin-bottom: 50px;
+}
+
+/* Login Card */
+.login-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+    border: 2px solid #f8f9fa;
+    overflow: hidden;
+    margin-bottom: 30px;
+}
+
+.login-header {
+    text-align: center;
+    padding: 40px 30px 30px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-bottom: 1px solid #dee2e6;
+}
+
+.login-avatar {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    font-size: 2.5rem;
+    color: white;
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+}
+
+.login-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.login-subtitle {
+    color: #7f8c8d;
+    font-size: 1rem;
+    margin: 0;
+}
+
+/* Login Body */
+.login-body {
+    padding: 40px 30px;
+}
+
+.form-group {
+    margin-bottom: 25px;
+}
+
+.form-label {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    font-size: 0.95rem;
+}
+
+.label-icon {
+    margin-right: 8px;
+    color: #667eea;
+    font-size: 1rem;
+}
+
+/* Input Styling */
+.input-wrapper {
+    position: relative;
+}
+
+.input-icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #adb5bd;
+    z-index: 2;
+    font-size: 1.1rem;
+}
+
+.modern-input {
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    padding: 15px 15px 15px 50px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: #f8f9fa;
+    width: 100%;
+}
+
+.modern-input:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    background: white;
+    outline: none;
+}
+
+.modern-input::placeholder {
+    color: #adb5bd;
+    font-style: italic;
+}
+
+/* Password Toggle */
+.password-toggle {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #adb5bd;
+    z-index: 2;
+    font-size: 1.1rem;
+    transition: color 0.3s ease;
+}
+
+.password-toggle:hover {
+    color: #667eea;
+}
+
+/* Form Actions */
+.form-actions {
+    margin-top: 30px;
+}
+
+.btn-login {
+    width: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 12px;
+    padding: 15px;
+    color: white;
+    font-weight: 600;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-login:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+}
+
+.btn-login:active {
+    transform: translateY(0);
+}
+
+.btn-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-content i {
+    margin-right: 10px;
+    font-size: 1.2rem;
+}
+
+/* Login Footer */
+.login-footer {
+    padding: 30px;
+    background: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+}
+
+.divider {
+    text-align: center;
+    margin-bottom: 25px;
+    position: relative;
+}
+
+.divider::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: #dee2e6;
+}
+
+.divider span {
+    background: #f8f9fa;
+    color: #adb5bd;
+    padding: 0 15px;
+    font-size: 0.9rem;
+    position: relative;
+    z-index: 1;
+}
+
+.register-section {
+    text-align: center;
+}
+
+.register-text {
+    color: #7f8c8d;
+    font-size: 0.95rem;
+    margin-bottom: 15px;
+}
+
+.btn-register {
+    background: white;
+    border: 2px solid #667eea;
+    color: #667eea;
+    padding: 12px 24px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.3s ease;
+    font-size: 0.95rem;
+}
+
+.btn-register:hover {
+    background: #667eea;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.2);
+    text-decoration: none;
+}
+
+.btn-register i {
+    margin-right: 8px;
+}
+
+/* Info Card */
+.info-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    border: 2px solid #f8f9fa;
+    overflow: hidden;
+}
+
+.info-content {
+    padding: 30px;
+    display: flex;
+    align-items: flex-start;
+}
+
+.info-icon {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+    margin-right: 20px;
+    flex-shrink: 0;
+}
+
+.info-text h5 {
+    color: #2c3e50;
+    font-weight: 700;
+    margin-bottom: 10px;
+    font-size: 1.2rem;
+}
+
+.info-text p {
+    color: #7f8c8d;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.features-list {
+    background: #f8f9fa;
+    padding: 25px 30px;
+    border-top: 1px solid #dee2e6;
+}
+
+.feature-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 0;
+    color: #495057;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.feature-item:not(:last-child) {
+    border-bottom: 1px solid #e9ecef;
+}
+
+.feature-item i {
+    margin-right: 12px;
+    color: #667eea;
+    font-size: 1.1rem;
+    width: 20px;
+    text-align: center;
+}
+
+/* Animations */
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.6s ease-out;
+}
+
+.animate-fade-in-delay {
+    animation: fadeIn 0.6s ease-out 0.3s both;
+}
+
+.animate-slide-up {
+    animation: slideUp 0.6s ease-out;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .hero-title {
+        font-size: 2rem;
+    }
+    
+    .hero-icon {
+        font-size: 2.5rem;
+        margin-right: 10px;
+    }
+    
+    .login-card {
+        margin: 0 15px 30px;
+    }
+    
+    .login-header {
+        padding: 30px 20px 25px;
+    }
+    
+    .login-body {
+        padding: 30px 20px;
+    }
+    
+    .login-footer {
+        padding: 25px 20px;
+    }
+    
+    .info-content {
+        flex-direction: column;
+        text-align: center;
+        padding: 25px 20px;
+    }
+    
+    .info-icon {
+        margin-right: 0;
+        margin-bottom: 15px;
+    }
+    
+    .features-list {
+        padding: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-title {
+        font-size: 1.8rem;
+    }
+    
+    .login-title {
+        font-size: 1.5rem;
+    }
+    
+    .modern-input {
+        padding: 12px 12px 12px 45px;
+    }
+    
+    .btn-login {
+        padding: 12px;
+    }
+}
+</style>
+
+<script>
+function togglePassword() {
+    const passwordField = document.getElementById('password');
+    const toggleIcon = document.getElementById('toggleIcon');
+    
+    if (passwordField.type === 'password') {
+        passwordField.type = 'text';
+        toggleIcon.classList.remove('fa-eye');
+        toggleIcon.classList.add('fa-eye-slash');
+    } else {
+        passwordField.type = 'password';
+        toggleIcon.classList.remove('fa-eye-slash');
+        toggleIcon.classList.add('fa-eye');
+    }
+}
+
+// Add focus effects
+document.addEventListener('DOMContentLoaded', function() {
+    const inputs = document.querySelectorAll('.modern-input');
+    
+    inputs.forEach(input => {
+        input.addEventListener('focus', function() {
+            this.parentElement.querySelector('.input-icon').style.color = '#667eea';
+        });
+        
+        input.addEventListener('blur', function() {
+            this.parentElement.querySelector('.input-icon').style.color = '#adb5bd';
+        });
+    });
+});
+</script>
 {% endblock %}

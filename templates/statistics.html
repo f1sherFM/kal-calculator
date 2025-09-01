@@ -1,197 +1,307 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-12">
-        <h2>
-            <i class="fas fa-chart-bar"></i> Статистика питания
-        </h2>
+<!-- Hero Section -->
+<div class="hero-section mb-5">
+    <div class="hero-content text-center">
+        <h1 class="hero-title animate-fade-in">
+            <i class="fas fa-chart-line hero-icon"></i> 
+            Статистика питания
+        </h1>
+        <p class="hero-subtitle animate-fade-in-delay">
+            <i class="fas fa-analytics"></i> Анализ вашего рациона и прогресса
+        </p>
     </div>
 </div>
 
 <!-- Средние показатели за неделю -->
-<div class="row mb-4">
-    <div class="col-md-3 mb-3">
-        <div class="card calorie-card h-100">
-            <div class="card-body text-center">
-                <h5 class="card-title">
-                    <i class="fas fa-fire"></i> Среднее
-                </h5>
-                <h2 class="mb-1">{{ avg_calories }}</h2>
-                <small>ккал/день</small>
+<div class="stats-overview mb-5">
+    <div class="section-header text-center mb-4">
+        <h2 class="section-title">
+            <i class="fas fa-chart-pie"></i> Средние показатели за неделю
+        </h2>
+        <p class="section-subtitle">Общая картина вашего питания</p>
+    </div>
+    
+    <div class="row g-4">
+        <div class="col-lg-3 col-md-6">
+            <div class="stats-card calorie-card animate-slide-up">
+                <div class="card-icon">
+                    <i class="fas fa-fire"></i>
+                </div>
+                <div class="card-content">
+                    <h3 class="stats-number">{{ avg_calories }}</h3>
+                    <p class="stats-label">Калории</p>
+                    <div class="stats-detail">ккал/день</div>
+                </div>
             </div>
         </div>
-    </div>
-    <div class="col-md-3 mb-3">
-        <div class="card protein-card h-100">
-            <div class="card-body text-center">
-                <h5 class="card-title">
-                    <i class="fas fa-dumbbell"></i> Белки
-                </h5>
-                <h2 class="mb-1">{{ avg_protein }}</h2>
-                <small>г/день</small>
+        
+        <div class="col-lg-3 col-md-6">
+            <div class="stats-card protein-card animate-slide-up" style="animation-delay: 0.1s">
+                <div class="card-icon">
+                    <i class="fas fa-dumbbell"></i>
+                </div>
+                <div class="card-content">
+                    <h3 class="stats-number">{{ avg_protein }}</h3>
+                    <p class="stats-label">Белки</p>
+                    <div class="stats-detail">г/день</div>
+                </div>
             </div>
         </div>
-    </div>
-    <div class="col-md-3 mb-3">
-        <div class="card carbs-card h-100">
-            <div class="card-body text-center">
-                <h5 class="card-title">
-                    <i class="fas fa-bread-slice"></i> Углеводы
-                </h5>
-                <h2 class="mb-1">{{ avg_carbs }}</h2>
-                <small>г/день</small>
+        
+        <div class="col-lg-3 col-md-6">
+            <div class="stats-card carbs-card animate-slide-up" style="animation-delay: 0.2s">
+                <div class="card-icon">
+                    <i class="fas fa-bread-slice"></i>
+                </div>
+                <div class="card-content">
+                    <h3 class="stats-number">{{ avg_carbs }}</h3>
+                    <p class="stats-label">Углеводы</p>
+                    <div class="stats-detail">г/день</div>
+                </div>
             </div>
         </div>
-    </div>
-    <div class="col-md-3 mb-3">
-        <div class="card fat-card h-100">
-            <div class="card-body text-center">
-                <h5 class="card-title">
-                    <i class="fas fa-tint"></i> Жиры
-                </h5>
-                <h2 class="mb-1">{{ avg_fat }}</h2>
-                <small>г/день</small>
+        
+        <div class="col-lg-3 col-md-6">
+            <div class="stats-card fat-card animate-slide-up" style="animation-delay: 0.3s">
+                <div class="card-icon">
+                    <i class="fas fa-tint"></i>
+                </div>
+                <div class="card-content">
+                    <h3 class="stats-number">{{ avg_fat }}</h3>
+                    <p class="stats-label">Жиры</p>
+                    <div class="stats-detail">г/день</div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <!-- График калорий за неделю -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fas fa-chart-line"></i> Калории за последние 7 дней
-                </h5>
+<div class="chart-section mb-5">
+    <div class="section-header text-center mb-4">
+        <h2 class="section-title">
+            <i class="fas fa-chart-line"></i> Динамика калорий
+        </h2>
+        <p class="section-subtitle">Тренд потребления за последние 7 дней</p>
+    </div>
+    
+    <div class="chart-card animate-fade-in">
+        <div class="chart-header">
+            <div class="chart-title">
+                <i class="fas fa-fire chart-icon"></i>
+                <span>Калории по дням</span>
             </div>
-            <div class="card-body">
-                <canvas id="caloriesChart" height="100"></canvas>
+            <div class="chart-period">
+                <i class="fas fa-calendar-alt"></i> Последние 7 дней
             </div>
+        </div>
+        <div class="chart-content">
+            <canvas id="caloriesChart" height="100"></canvas>
         </div>
     </div>
 </div>
 
 <!-- Анализ питания -->
-<div class="row mb-4">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fas fa-pie-chart"></i> Распределение БЖУ
-                </h5>
-            </div>
-            <div class="card-body">
-                <canvas id="macroChart" height="200"></canvas>
+<div class="analysis-section mb-5">
+    <div class="section-header text-center mb-4">
+        <h2 class="section-title">
+            <i class="fas fa-analytics"></i> Анализ питания
+        </h2>
+        <p class="section-subtitle">Детальный разбор вашего рациона</p>
+    </div>
+    
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="analysis-card macro-card animate-slide-up">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fas fa-pie-chart card-icon"></i>
+                        <span>Распределение БЖУ</span>
+                    </div>
+                    <div class="card-subtitle">Баланс макронутриентов</div>
+                </div>
+                <div class="card-content">
+                    <canvas id="macroChart" height="200"></canvas>
+                </div>
             </div>
         </div>
-    </div>
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fas fa-bullseye"></i> Анализ питания
-                </h5>
-            </div>
-            <div class="card-body">
+        <div class="col-md-6">
+            <div class="analysis-card recommendations-card animate-slide-up" style="animation-delay: 0.1s">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fas fa-bullseye card-icon"></i>
+                        <span>Анализ питания</span>
+                    </div>
+                    <div class="card-subtitle">Рекомендации и оценка</div>
+                </div>
+                <div class="card-content">
                 {% if avg_calories > 0 %}
-                    <div class="mb-3">
-                        <h6>Калорийность:</h6>
+                    <div class="analysis-item">
+                        <div class="analysis-header">
+                            <i class="fas fa-fire"></i>
+                            <span>Калорийность</span>
+                        </div>
                         {% if avg_calories < 1200 %}
-                            <div class="alert alert-warning">
-                                <i class="fas fa-exclamation-triangle"></i>
-                                Слишком низкая калорийность. Может быть опасно для здоровья.
+                            <div class="analysis-alert warning">
+                                <div class="alert-icon">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                                <div class="alert-content">
+                                    <strong>Внимание!</strong>
+                                    <p>Слишком низкая калорийность. Может быть опасно для здоровья.</p>
+                                </div>
                             </div>
                         {% elif avg_calories > 3000 %}
-                            <div class="alert alert-info">
-                                <i class="fas fa-info-circle"></i>
-                                Высокая калорийность. Проверьте, соответствует ли это вашим целям.
+                            <div class="analysis-alert info">
+                                <div class="alert-icon">
+                                    <i class="fas fa-info-circle"></i>
+                                </div>
+                                <div class="alert-content">
+                                    <strong>Информация</strong>
+                                    <p>Высокая калорийность. Проверьте, соответствует ли это вашим целям.</p>
+                                </div>
                             </div>
                         {% else %}
-                            <div class="alert alert-success">
-                                <i class="fas fa-check-circle"></i>
-                                Калорийность в пределах нормы.
+                            <div class="analysis-alert success">
+                                <div class="alert-icon">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="alert-content">
+                                    <strong>Отлично!</strong>
+                                    <p>Калорийность в пределах нормы.</p>
+                                </div>
                             </div>
                         {% endif %}
                     </div>
                     
-                    <div class="mb-3">
-                        <h6>Белки:</h6>
+                    <div class="analysis-item">
+                        <div class="analysis-header">
+                            <i class="fas fa-dumbbell"></i>
+                            <span>Белки</span>
+                        </div>
                         {% if avg_protein < 0.8 * 70 %}  {# Примерно 0.8г на кг веса #}
-                            <div class="alert alert-warning">
-                                <i class="fas fa-exclamation-triangle"></i>
-                                Недостаток белка. Рекомендуется увеличить потребление.
+                            <div class="analysis-alert warning">
+                                <div class="alert-icon">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                                <div class="alert-content">
+                                    <strong>Внимание!</strong>
+                                    <p>Недостаток белка. Рекомендуется увеличить потребление.</p>
+                                </div>
                             </div>
                         {% else %}
-                            <div class="alert alert-success">
-                                <i class="fas fa-check-circle"></i>
-                                Достаточное потребление белка.
+                            <div class="analysis-alert success">
+                                <div class="alert-icon">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="alert-content">
+                                    <strong>Отлично!</strong>
+                                    <p>Достаточное потребление белка.</p>
+                                </div>
                             </div>
                         {% endif %}
                     </div>
                     
-                    <div class="mb-3">
-                        <h6>Рекомендации:</h6>
-                        <ul class="list-unstyled">
-                            <li><i class="fas fa-apple-alt text-success"></i> Добавьте больше овощей и фруктов</li>
-                            <li><i class="fas fa-fish text-info"></i> Включите источники омега-3</li>
-                            <li><i class="fas fa-tint text-primary"></i> Не забывайте пить воду</li>
-                            <li><i class="fas fa-clock text-warning"></i> Соблюдайте режим питания</li>
-                        </ul>
+                    <div class="analysis-item">
+                        <div class="analysis-header">
+                            <i class="fas fa-lightbulb"></i>
+                            <span>Рекомендации</span>
+                        </div>
+                        <div class="recommendations-list">
+                            <div class="recommendation-item">
+                                <i class="fas fa-apple-alt"></i>
+                                <span>Добавьте больше овощей и фруктов</span>
+                            </div>
+                            <div class="recommendation-item">
+                                <i class="fas fa-fish"></i>
+                                <span>Включите источники омега-3</span>
+                            </div>
+                            <div class="recommendation-item">
+                                <i class="fas fa-tint"></i>
+                                <span>Не забывайте пить воду</span>
+                            </div>
+                            <div class="recommendation-item">
+                                <i class="fas fa-clock"></i>
+                                <span>Соблюдайте режим питания</span>
+                            </div>
+                        </div>
                     </div>
                 {% else %}
-                    <div class="text-center text-muted py-4">
-                        <i class="fas fa-chart-pie fa-3x mb-3"></i>
-                        <h5>Недостаточно данных</h5>
-                        <p>Добавьте записи о питании для получения анализа.</p>
-                        <a href="{{ url_for('add_food') }}" class="btn btn-primary">
-                            <i class="fas fa-plus"></i> Добавить еду
+                    <div class="empty-state">
+                        <div class="empty-icon">
+                            <i class="fas fa-chart-pie"></i>
+                        </div>
+                        <h4 class="empty-title">Недостаточно данных</h4>
+                        <p class="empty-description">Добавьте записи о питании для получения анализа.</p>
+                        <a href="{{ url_for('add_food') }}" class="btn-add-data">
+                            <i class="fas fa-plus"></i>
+                            <span>Добавить еду</span>
                         </a>
                     </div>
                 {% endif %}
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <!-- Цели и достижения -->
-<div class="row">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fas fa-trophy"></i> Цели и достижения
-                </h5>
+<div class="goals-section">
+    <div class="section-header text-center mb-4">
+        <h2 class="section-title">
+            <i class="fas fa-trophy"></i> Цели и достижения
+        </h2>
+        <p class="section-subtitle">Отслеживайте свой прогресс и мотивацию</p>
+    </div>
+    
+    <div class="goals-card animate-fade-in">
+        <div class="goals-grid">
+            <div class="goal-item animate-slide-up">
+                <div class="goal-icon success">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+                <div class="goal-content">
+                    <h4 class="goal-title">Постоянство</h4>
+                    <p class="goal-description">Ведите дневник каждый день</p>
+                    <div class="goal-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="consistency-progress"></div>
+                        </div>
+                        <span class="progress-text" id="consistency-text">{{ consistency_progress | default(0) }}% выполнено</span>
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-4 mb-3">
-                        <div class="text-center">
-                            <div class="bg-light p-3 rounded mb-2">
-                                <i class="fas fa-calendar-check fa-2x text-success"></i>
-                            </div>
-                            <h6>Постоянство</h6>
-                            <small class="text-muted">Ведите дневник каждый день</small>
+            
+            <div class="goal-item animate-slide-up" style="animation-delay: 0.1s">
+                <div class="goal-icon primary">
+                    <i class="fas fa-balance-scale"></i>
+                </div>
+                <div class="goal-content">
+                    <h4 class="goal-title">Баланс БЖУ</h4>
+                    <p class="goal-description">Следите за балансом питательных веществ</p>
+                    <div class="goal-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="bju-progress"></div>
                         </div>
+                        <span class="progress-text" id="bju-text">{{ bju_balance_progress | default(0) }}% выполнено</span>
                     </div>
-                    <div class="col-md-4 mb-3">
-                        <div class="text-center">
-                            <div class="bg-light p-3 rounded mb-2">
-                                <i class="fas fa-balance-scale fa-2x text-primary"></i>
-                            </div>
-                            <h6>Баланс БЖУ</h6>
-                            <small class="text-muted">Следите за балансом питательных веществ</small>
+                </div>
+            </div>
+            
+            <div class="goal-item animate-slide-up" style="animation-delay: 0.2s">
+                <div class="goal-icon warning">
+                    <i class="fas fa-bullseye"></i>
+                </div>
+                <div class="goal-content">
+                    <h4 class="goal-title">Цель по калориям</h4>
+                    <p class="goal-description">Придерживайтесь дневной нормы</p>
+                    <div class="goal-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="calorie-progress"></div>
                         </div>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <div class="text-center">
-                            <div class="bg-light p-3 rounded mb-2">
-                                <i class="fas fa-bullseye fa-2x text-warning"></i>
-                            </div>
-                            <h6>Цель по калориям</h6>
-                            <small class="text-muted">Придерживайтесь дневной нормы</small>
-                        </div>
+                        <span class="progress-text" id="calorie-text">{{ calorie_goal_progress | default(0) }}% выполнено</span>
                     </div>
                 </div>
             </div>
@@ -201,95 +311,687 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
-// График калорий за неделю
-const dailyStatsData = {{ daily_stats | tojson | safe }};
+<style>
+/* Modern Statistics Page Styles */
 
-const caloriesCtx = document.getElementById('caloriesChart').getContext('2d');
-new Chart(caloriesCtx, {
-    type: 'line',
-    data: {
-        labels: dailyStatsData.map(day => day.date),
-        datasets: [{
-            label: 'Калории',
-            data: dailyStatsData.map(day => day.calories),
-            borderColor: 'rgb(54, 162, 235)',
-            backgroundColor: 'rgba(54, 162, 235, 0.1)',
-            borderWidth: 3,
-            fill: true,
-            tension: 0.3
-        }]
-    },
-    options: {
-        responsive: true,
-        scales: {
-            y: {
-                beginAtZero: true,
-                title: {
-                    display: true,
-                    text: 'Калории'
-                }
-            },
-            x: {
-                title: {
-                    display: true,
-                    text: 'Дата'
-                }
-            }
-        },
-        plugins: {
-            legend: {
-                display: false
-            }
-        }
+/* Hero Section */
+.hero-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 20px;
+    padding: 50px 30px;
+    position: relative;
+    overflow: hidden;
+    color: white;
+    text-align: center;
+}
+
+.hero-title {
+    font-size: 2.8rem;
+    font-weight: 700;
+    margin-bottom: 15px;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+.hero-icon {
+    font-size: 3.5rem;
+    margin-right: 20px;
+    animation: pulse 2s infinite;
+}
+
+.hero-subtitle {
+    font-size: 1.2rem;
+    opacity: 0.9;
+    margin: 0;
+}
+
+/* Section Headers */
+.section-header {
+    margin-bottom: 30px;
+}
+
+.section-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.section-title i {
+    margin-right: 15px;
+    color: #667eea;
+    font-size: 2.2rem;
+}
+
+.section-subtitle {
+    color: #7f8c8d;
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+/* Statistics Overview Cards */
+.stats-overview {
+    margin-bottom: 50px;
+}
+
+.stats-card {
+    background: white;
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    border: none;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    text-align: center;
+    color: white;
+}
+
+.stats-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+}
+
+.stats-card.calorie-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.stats-card.protein-card {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.stats-card.carbs-card {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.stats-card.fat-card {
+    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
+.card-icon {
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+    opacity: 0.9;
+}
+
+.stats-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 10px 0;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+.stats-label {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 5px;
+    opacity: 0.9;
+}
+
+.stats-detail {
+    font-size: 0.9rem;
+    opacity: 0.8;
+    font-weight: 500;
+}
+
+/* Chart Section */
+.chart-section {
+    margin-bottom: 50px;
+}
+
+.chart-card {
+    background: white;
+    border-radius: 20px;
+    padding: 0;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    border: 2px solid #f8f9fa;
+    overflow: hidden;
+}
+
+.chart-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 25px 30px;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chart-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
+    margin: 0;
+}
+
+.chart-icon {
+    margin-right: 12px;
+    color: #667eea;
+    font-size: 1.5rem;
+}
+
+.chart-period {
+    color: #7f8c8d;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+}
+
+.chart-period i {
+    margin-right: 8px;
+}
+
+.chart-content {
+    padding: 30px;
+}
+
+/* Analysis Section */
+.analysis-section {
+    margin-bottom: 50px;
+}
+
+.analysis-card {
+    background: white;
+    border-radius: 20px;
+    padding: 0;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    border: 2px solid #f8f9fa;
+    overflow: hidden;
+    height: 100%;
+}
+
+.analysis-card .card-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 25px 30px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.analysis-card .card-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
+    margin: 0;
+}
+
+.analysis-card .card-icon {
+    margin-right: 12px;
+    color: #667eea;
+    font-size: 1.5rem;
+}
+
+.analysis-card .card-subtitle {
+    color: #7f8c8d;
+    font-size: 0.9rem;
+    margin: 5px 0 0 0;
+}
+
+.analysis-card .card-content {
+    padding: 30px;
+}
+
+/* Analysis Items */
+.analysis-item {
+    margin-bottom: 25px;
+}
+
+.analysis-item:last-child {
+    margin-bottom: 0;
+}
+
+.analysis-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.analysis-header i {
+    margin-right: 10px;
+    color: #667eea;
+    font-size: 1.2rem;
+}
+
+/* Analysis Alerts */
+.analysis-alert {
+    border-radius: 12px;
+    padding: 15px;
+    display: flex;
+    align-items: flex-start;
+    border: none;
+    margin-bottom: 10px;
+}
+
+.analysis-alert.success {
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.1), rgba(25, 135, 84, 0.1));
+    border-left: 4px solid #28a745;
+}
+
+.analysis-alert.warning {
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(255, 171, 0, 0.1));
+    border-left: 4px solid #ffc107;
+}
+
+.analysis-alert.info {
+    background: linear-gradient(135deg, rgba(13, 110, 253, 0.1), rgba(10, 88, 202, 0.1));
+    border-left: 4px solid #0d6efd;
+}
+
+.alert-icon {
+    margin-right: 15px;
+    font-size: 1.3rem;
+    margin-top: 2px;
+}
+
+.analysis-alert.success .alert-icon {
+    color: #28a745;
+}
+
+.analysis-alert.warning .alert-icon {
+    color: #ffc107;
+}
+
+.analysis-alert.info .alert-icon {
+    color: #0d6efd;
+}
+
+.alert-content {
+    flex: 1;
+}
+
+.alert-content strong {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 1rem;
+}
+
+.alert-content p {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+/* Recommendations */
+.recommendations-list {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.recommendation-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #e9ecef;
+    font-size: 0.95rem;
+}
+
+.recommendation-item:last-child {
+    border-bottom: none;
+}
+
+.recommendation-item i {
+    margin-right: 12px;
+    color: #667eea;
+    font-size: 1.1rem;
+    width: 20px;
+    text-align: center;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.empty-icon {
+    font-size: 4rem;
+    color: #dee2e6;
+    margin-bottom: 20px;
+}
+
+.empty-title {
+    color: #6c757d;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 15px;
+}
+
+.empty-description {
+    color: #adb5bd;
+    font-size: 1rem;
+    margin-bottom: 25px;
+    line-height: 1.5;
+}
+
+.btn-add-data {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.btn-add-data:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    color: white;
+    text-decoration: none;
+}
+
+.btn-add-data i {
+    margin-right: 8px;
+}
+
+/* Goals Section */
+.goals-section {
+    margin-bottom: 30px;
+}
+
+.goals-card {
+    background: white;
+    border-radius: 20px;
+    padding: 40px 30px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    border: 2px solid #f8f9fa;
+}
+
+.goals-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+}
+
+.goal-item {
+    background: #f8f9fa;
+    border-radius: 16px;
+    padding: 25px;
+    transition: all 0.3s ease;
+    border: 2px solid #e9ecef;
+}
+
+.goal-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    border-color: #667eea;
+}
+
+.goal-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    color: white;
+}
+
+.goal-icon.success {
+    background: linear-gradient(135deg, #28a745, #20c997);
+}
+
+.goal-icon.primary {
+    background: linear-gradient(135deg, #007bff, #0056b3);
+}
+
+.goal-icon.warning {
+    background: linear-gradient(135deg, #ffc107, #e0a800);
+}
+
+.goal-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.goal-description {
+    color: #7f8c8d;
+    font-size: 0.95rem;
+    margin-bottom: 20px;
+    line-height: 1.4;
+}
+
+.goal-progress {
+    margin-top: 15px;
+}
+
+.progress-bar {
+    height: 8px;
+    background: #e9ecef;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.progress-text {
+    font-size: 0.85rem;
+    color: #7f8c8d;
+    font-weight: 600;
+}
+
+/* Animations */
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.6s ease-out;
+}
+
+.animate-fade-in-delay {
+    animation: fadeIn 0.6s ease-out 0.3s both;
+}
+
+.animate-slide-up {
+    animation: slideUp 0.6s ease-out;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .hero-title {
+        font-size: 2.2rem;
+    }
+    
+    .hero-icon {
+        font-size: 2.5rem;
+        margin-right: 10px;
+    }
+    
+    .section-title {
+        font-size: 1.6rem;
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .section-title i {
+        margin-right: 0;
+        margin-bottom: 10px;
+    }
+    
+    .stats-card {
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .chart-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
+    }
+    
+    .goals-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .goal-item {
+        padding: 20px;
+    }
+}
+</style>
+
+<script>
+// Pass data from Flask to JavaScript
+const templateData = JSON.parse('{{ {"dailyStats": daily_stats | default([]), "avgCalories": avg_calories | default(0) | float | round(1), "avgProtein": avg_protein | default(0) | float | round(1), "avgFat": avg_fat | default(0) | float | round(1), "avgCarbs": avg_carbs | default(0) | float | round(1), "consistencyProgress": consistency_progress | default(0), "bjuBalanceProgress": bju_balance_progress | default(0), "calorieGoalProgress": calorie_goal_progress | default(0)} | tojson | safe }}');
+
+// Set progress bar widths dynamically
+document.addEventListener('DOMContentLoaded', function() {
+    // Set consistency progress
+    const consistencyProgress = document.getElementById('consistency-progress');
+    if (consistencyProgress) {
+        consistencyProgress.style.width = templateData.consistencyProgress + '%';
+    }
+    
+    // Set BJU balance progress
+    const bjuProgress = document.getElementById('bju-progress');
+    if (bjuProgress) {
+        bjuProgress.style.width = templateData.bjuBalanceProgress + '%';
+    }
+    
+    // Set calorie goal progress
+    const calorieProgress = document.getElementById('calorie-progress');
+    if (calorieProgress) {
+        calorieProgress.style.width = templateData.calorieGoalProgress + '%';
     }
 });
 
-// Круговая диаграмма БЖУ
-{% if avg_calories > 0 %}
-{% set protein_calories = avg_protein * 4 %}
-{% set fat_calories = avg_fat * 9 %}
-{% set carbs_calories = avg_carbs * 4 %}
-const macroCtx = document.getElementById('macroChart').getContext('2d');
-new Chart(macroCtx, {
-    type: 'doughnut',
-    data: {
-        labels: ['Белки', 'Жиры', 'Углеводы'],
-        datasets: [{
-            data: [{{ protein_calories }}, {{ fat_calories }}, {{ carbs_calories }}],
-            backgroundColor: [
-                'rgba(255, 99, 132, 0.8)',
-                'rgba(255, 205, 86, 0.8)',
-                'rgba(54, 162, 235, 0.8)'
-            ],
-            borderColor: [
-                'rgba(255, 99, 132, 1)',
-                'rgba(255, 205, 86, 1)',
-                'rgba(54, 162, 235, 1)'
-            ],
-            borderWidth: 2
-        }]
-    },
-    options: {
-        responsive: true,
-        plugins: {
-            legend: {
-                position: 'bottom'
+// График калорий за неделю
+if (document.getElementById('caloriesChart')) {
+    const caloriesCtx = document.getElementById('caloriesChart').getContext('2d');
+    new Chart(caloriesCtx, {
+        type: 'line',
+        data: {
+            labels: templateData.dailyStats.map(day => day.date),
+            datasets: [{
+                label: 'Калории',
+                data: templateData.dailyStats.map(day => day.calories),
+                borderColor: 'rgb(54, 162, 235)',
+                backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Калории'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Дата'
+                    }
+                }
             },
-            tooltip: {
-                callbacks: {
-                    label: function(context) {
-                        const label = context.label || '';
-                        const value = context.parsed;
-                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                        const percentage = Math.round((value / total) * 100);
-                        return `${label}: ${value.toFixed(0)} ккал (${percentage}%)`;
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+}
+
+// Круговая диаграмма БЖУ
+if (templateData.avgCalories > 0 && document.getElementById('macroChart')) {
+    const proteinCalories = templateData.avgProtein * 4;
+    const fatCalories = templateData.avgFat * 9;
+    const carbsCalories = templateData.avgCarbs * 4;
+    
+    const macroCtx = document.getElementById('macroChart').getContext('2d');
+    new Chart(macroCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Белки', 'Жиры', 'Углеводы'],
+            datasets: [{
+                data: [proteinCalories, fatCalories, carbsCalories],
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.8)',
+                    'rgba(255, 205, 86, 0.8)',
+                    'rgba(54, 162, 235, 0.8)'
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(255, 205, 86, 1)',
+                    'rgba(54, 162, 235, 1)'
+                ],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.parsed;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = Math.round((value / total) * 100);
+                            return `${label}: ${value.toFixed(0)} ккал (${percentage}%)`;
+                        }
                     }
                 }
             }
         }
-    }
-});
-{% endif %}
+    });
+}
 </script>
 {% endblock %}

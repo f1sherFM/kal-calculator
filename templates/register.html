@@ -3,111 +3,777 @@
 {% block title %}Регистрация в КалькКал{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6 col-lg-5">
-        <div class="card shadow-sm">
-            <div class="card-header bg-success text-white text-center">
-                <h4 class="mb-0">
-                    <i class="fas fa-user-plus"></i> Регистрация
-                </h4>
-            </div>
-            <div class="card-body">
-                <form method="POST">
-                    <div class="mb-3">
-                        <label for="username" class="form-label">Логин *</label>
-                        <div class="input-group">
-                            <span class="input-group-text">
-                                <i class="fas fa-user"></i>
-                            </span>
-                            <input type="text" class="form-control" name="username" id="username" 
-                                   required minlength="3" placeholder="Минимум 3 символа">
-                        </div>
-                        <div class="form-text">Логин должен быть уникальным, минимум 3 символа</div>
+<!-- Hero Section -->
+<div class="register-hero mb-5">
+    <div class="hero-content text-center">
+        <h1 class="hero-title animate-fade-in">
+            <i class="fas fa-user-plus hero-icon"></i> 
+            Присоединяйтесь к нам!
+        </h1>
+        <p class="hero-subtitle animate-fade-in-delay">
+            <i class="fas fa-star"></i> Создайте аккаунт и начните отслеживание питания уже сегодня
+        </p>
+    </div>
+</div>
+
+<div class="register-container">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8 col-sm-10">
+            <!-- Registration Form Card -->
+            <div class="register-card animate-slide-up">
+                <div class="register-header">
+                    <div class="register-avatar">
+                        <i class="fas fa-user-plus"></i>
                     </div>
-                    
-                    <div class="mb-3">
-                        <label for="email" class="form-label">Email (необязательно)</label>
-                        <div class="input-group">
-                            <span class="input-group-text">
-                                <i class="fas fa-envelope"></i>
-                            </span>
-                            <input type="email" class="form-control" name="email" id="email" 
-                                   placeholder="your@email.com">
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="password" class="form-label">Пароль *</label>
-                        <div class="input-group">
-                            <span class="input-group-text">
-                                <i class="fas fa-lock"></i>
-                            </span>
-                            <input type="password" class="form-control" name="password" id="password" 
-                                   required minlength="4" placeholder="Минимум 4 символа">
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="confirm_password" class="form-label">Подтверждение пароля *</label>
-                        <div class="input-group">
-                            <span class="input-group-text">
-                                <i class="fas fa-lock"></i>
-                            </span>
-                            <input type="password" class="form-control" name="confirm_password" id="confirm_password" 
-                                   required minlength="4" placeholder="Повторите пароль">
-                        </div>
-                    </div>
-                    
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-success btn-lg">
-                            <i class="fas fa-user-plus"></i> Создать аккаунт
-                        </button>
-                    </div>
-                </form>
+                    <h2 class="register-title">Создание аккаунта</h2>
+                    <p class="register-subtitle">Заполните форму для регистрации</p>
+                </div>
                 
-                <hr>
+                <div class="register-body">
+                    <form method="POST">
+                        <div class="form-group">
+                            <label for="username" class="form-label">
+                                <i class="fas fa-user label-icon"></i>
+                                Логин
+                                <span class="required-mark">*</span>
+                            </label>
+                            <div class="input-wrapper">
+                                <div class="input-icon">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <input type="text" class="form-control modern-input" name="username" id="username" 
+                                       required minlength="3" placeholder="Минимум 3 символа">
+                            </div>
+                            <div class="input-help">Логин должен быть уникальным, минимум 3 символа</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="email" class="form-label">
+                                <i class="fas fa-envelope label-icon"></i>
+                                Email
+                                <span class="optional-mark">(необязательно)</span>
+                            </label>
+                            <div class="input-wrapper">
+                                <div class="input-icon">
+                                    <i class="fas fa-envelope"></i>
+                                </div>
+                                <input type="email" class="form-control modern-input" name="email" id="email" 
+                                       placeholder="your@email.com">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="password" class="form-label">
+                                <i class="fas fa-lock label-icon"></i>
+                                Пароль
+                                <span class="required-mark">*</span>
+                            </label>
+                            <div class="input-wrapper">
+                                <div class="input-icon">
+                                    <i class="fas fa-lock"></i>
+                                </div>
+                                <input type="password" class="form-control modern-input" name="password" id="password" 
+                                       required minlength="4" placeholder="Минимум 4 символа">
+                                <div class="password-toggle" onclick="togglePassword('password')">
+                                    <i class="fas fa-eye" id="toggleIcon1"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="confirm_password" class="form-label">
+                                <i class="fas fa-shield-alt label-icon"></i>
+                                Подтверждение пароля
+                                <span class="required-mark">*</span>
+                            </label>
+                            <div class="input-wrapper">
+                                <div class="input-icon">
+                                    <i class="fas fa-shield-alt"></i>
+                                </div>
+                                <input type="password" class="form-control modern-input" name="confirm_password" id="confirm_password" 
+                                       required minlength="4" placeholder="Повторите пароль">
+                                <div class="password-toggle" onclick="togglePassword('confirm_password')">
+                                    <i class="fas fa-eye" id="toggleIcon2"></i>
+                                </div>
+                            </div>
+                            <div class="password-match" id="passwordMatch"></div>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="submit" class="btn-register">
+                                <div class="btn-content">
+                                    <i class="fas fa-user-plus"></i>
+                                    <span>Создать аккаунт</span>
+                                </div>
+                            </button>
+                        </div>
+                    </form>
+                </div>
                 
-                <div class="text-center">
-                    <p class="mb-0">Уже есть аккаунт?</p>
-                    <a href="{{ url_for('login') }}" class="btn btn-outline-primary">
-                        <i class="fas fa-sign-in-alt"></i> Войти
-                    </a>
+                <div class="register-footer">
+                    <div class="divider">
+                        <span>или</span>
+                    </div>
+                    
+                    <div class="login-section">
+                        <p class="login-text">Уже есть аккаунт?</p>
+                        <a href="{{ url_for('login') }}" class="btn-login">
+                            <i class="fas fa-sign-in-alt"></i>
+                            <span>Войти</span>
+                        </a>
+                    </div>
                 </div>
             </div>
-        </div>
-        
-        <div class="text-center mt-4">
-            <div class="card bg-light">
-                <div class="card-body">
-                    <h6 class="text-success">
-                        <i class="fas fa-heart"></i> Добро пожаловать в КалькКал!
-                    </h6>
-                    <p class="small text-muted mb-0">
-                        После регистрации вы сможете:
-                    </p>
-                    <ul class="small text-muted text-start mt-2">
-                        <li>Отслеживать потребление калорий</li>
-                        <li>Вести дневник питания</li>
-                        <li>Настроить персональные цели</li>
-                        <li>Просматривать статистику</li>
-                    </ul>
+            
+            <!-- Benefits Card -->
+            <div class="benefits-card animate-slide-up" style="animation-delay: 0.2s">
+                <div class="benefits-header">
+                    <div class="benefits-icon">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <div class="benefits-text">
+                        <h5>Добро пожаловать в КалькКал!</h5>
+                        <p>После регистрации вы сможете:</p>
+                    </div>
+                </div>
+                
+                <div class="benefits-list">
+                    <div class="benefit-item">
+                        <div class="benefit-icon">
+                            <i class="fas fa-fire"></i>
+                        </div>
+                        <div class="benefit-content">
+                            <h6>Отслеживание калорий</h6>
+                            <p>Контролируйте потребление калорий каждый день</p>
+                        </div>
+                    </div>
+                    
+                    <div class="benefit-item">
+                        <div class="benefit-icon">
+                            <i class="fas fa-book"></i>
+                        </div>
+                        <div class="benefit-content">
+                            <h6>Дневник питания</h6>
+                            <p>Ведите подробные записи о приёмах пищи</p>
+                        </div>
+                    </div>
+                    
+                    <div class="benefit-item">
+                        <div class="benefit-icon">
+                            <i class="fas fa-target"></i>
+                        </div>
+                        <div class="benefit-content">
+                            <h6>Персональные цели</h6>
+                            <p>Настройте индивидуальные цели по весу и калориям</p>
+                        </div>
+                    </div>
+                    
+                    <div class="benefit-item">
+                        <div class="benefit-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="benefit-content">
+                            <h6>Статистика и аналитика</h6>
+                            <p>Просматривайте детальную статистику прогресса</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+/* Modern Register Page Styles */
+
+/* Hero Section */
+.register-hero {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    border-radius: 20px;
+    padding: 50px 30px;
+    position: relative;
+    overflow: hidden;
+    color: white;
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.hero-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 15px;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+.hero-icon {
+    font-size: 3rem;
+    margin-right: 15px;
+    animation: pulse 2s infinite;
+}
+
+.hero-subtitle {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin: 0;
+    max-width: 700px;
+    margin: 0 auto;
+    line-height: 1.5;
+}
+
+/* Register Container */
+.register-container {
+    margin-bottom: 50px;
+}
+
+/* Register Card */
+.register-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+    border: 2px solid #f8f9fa;
+    overflow: hidden;
+    margin-bottom: 30px;
+}
+
+.register-header {
+    text-align: center;
+    padding: 40px 30px 30px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-bottom: 1px solid #dee2e6;
+}
+
+.register-avatar {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    font-size: 2.5rem;
+    color: white;
+    box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
+}
+
+.register-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.register-subtitle {
+    color: #7f8c8d;
+    font-size: 1rem;
+    margin: 0;
+}
+
+/* Register Body */
+.register-body {
+    padding: 40px 30px;
+}
+
+.form-group {
+    margin-bottom: 25px;
+}
+
+.form-label {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    font-size: 0.95rem;
+}
+
+.label-icon {
+    margin-right: 8px;
+    color: #28a745;
+    font-size: 1rem;
+}
+
+.required-mark {
+    color: #dc3545;
+    margin-left: 5px;
+    font-weight: 700;
+}
+
+.optional-mark {
+    color: #6c757d;
+    font-size: 0.85rem;
+    font-weight: 400;
+    margin-left: 5px;
+}
+
+/* Input Styling */
+.input-wrapper {
+    position: relative;
+}
+
+.input-icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #adb5bd;
+    z-index: 2;
+    font-size: 1.1rem;
+}
+
+.modern-input {
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    padding: 15px 15px 15px 50px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: #f8f9fa;
+    width: 100%;
+}
+
+.modern-input:focus {
+    border-color: #28a745;
+    box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
+    background: white;
+    outline: none;
+}
+
+.modern-input::placeholder {
+    color: #adb5bd;
+    font-style: italic;
+}
+
+.modern-input.is-valid {
+    border-color: #28a745;
+}
+
+.modern-input.is-invalid {
+    border-color: #dc3545;
+}
+
+/* Input Help Text */
+.input-help {
+    font-size: 0.85rem;
+    color: #6c757d;
+    margin-top: 5px;
+    display: flex;
+    align-items: center;
+}
+
+/* Password Toggle */
+.password-toggle {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #adb5bd;
+    z-index: 2;
+    font-size: 1.1rem;
+    transition: color 0.3s ease;
+}
+
+.password-toggle:hover {
+    color: #28a745;
+}
+
+/* Password Match Indicator */
+.password-match {
+    font-size: 0.85rem;
+    margin-top: 5px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.password-match.match {
+    color: #28a745;
+}
+
+.password-match.no-match {
+    color: #dc3545;
+}
+
+/* Form Actions */
+.form-actions {
+    margin-top: 30px;
+}
+
+.btn-register {
+    width: 100%;
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    border: none;
+    border-radius: 12px;
+    padding: 15px;
+    color: white;
+    font-weight: 600;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-register:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(40, 167, 69, 0.3);
+}
+
+.btn-register:active {
+    transform: translateY(0);
+}
+
+.btn-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-content i {
+    margin-right: 10px;
+    font-size: 1.2rem;
+}
+
+/* Register Footer */
+.register-footer {
+    padding: 30px;
+    background: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+}
+
+.divider {
+    text-align: center;
+    margin-bottom: 25px;
+    position: relative;
+}
+
+.divider::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: #dee2e6;
+}
+
+.divider span {
+    background: #f8f9fa;
+    color: #adb5bd;
+    padding: 0 15px;
+    font-size: 0.9rem;
+    position: relative;
+    z-index: 1;
+}
+
+.login-section {
+    text-align: center;
+}
+
+.login-text {
+    color: #7f8c8d;
+    font-size: 0.95rem;
+    margin-bottom: 15px;
+}
+
+.btn-login {
+    background: white;
+    border: 2px solid #28a745;
+    color: #28a745;
+    padding: 12px 24px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.3s ease;
+    font-size: 0.95rem;
+}
+
+.btn-login:hover {
+    background: #28a745;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(40, 167, 69, 0.2);
+    text-decoration: none;
+}
+
+.btn-login i {
+    margin-right: 8px;
+}
+
+/* Benefits Card */
+.benefits-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    border: 2px solid #f8f9fa;
+    overflow: hidden;
+}
+
+.benefits-header {
+    padding: 30px;
+    display: flex;
+    align-items: center;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-bottom: 1px solid #dee2e6;
+}
+
+.benefits-icon {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+    margin-right: 20px;
+    flex-shrink: 0;
+}
+
+.benefits-text h5 {
+    color: #2c3e50;
+    font-weight: 700;
+    margin-bottom: 10px;
+    font-size: 1.2rem;
+}
+
+.benefits-text p {
+    color: #7f8c8d;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.benefits-list {
+    padding: 30px;
+}
+
+.benefit-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 20px 0;
+    border-bottom: 1px solid #f1f3f4;
+}
+
+.benefit-item:last-child {
+    border-bottom: none;
+}
+
+.benefit-icon {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.1), rgba(32, 201, 151, 0.1));
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    color: #28a745;
+    margin-right: 20px;
+    flex-shrink: 0;
+}
+
+.benefit-content h6 {
+    color: #2c3e50;
+    font-weight: 700;
+    margin-bottom: 5px;
+    font-size: 1rem;
+}
+
+.benefit-content p {
+    color: #7f8c8d;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    margin: 0;
+}
+
+/* Animations */
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.6s ease-out;
+}
+
+.animate-fade-in-delay {
+    animation: fadeIn 0.6s ease-out 0.3s both;
+}
+
+.animate-slide-up {
+    animation: slideUp 0.6s ease-out;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .hero-title {
+        font-size: 2rem;
+    }
+    
+    .hero-icon {
+        font-size: 2.5rem;
+        margin-right: 10px;
+    }
+    
+    .register-card {
+        margin: 0 15px 30px;
+    }
+    
+    .register-header {
+        padding: 30px 20px 25px;
+    }
+    
+    .register-body {
+        padding: 30px 20px;
+    }
+    
+    .register-footer {
+        padding: 25px 20px;
+    }
+    
+    .benefits-header {
+        flex-direction: column;
+        text-align: center;
+        padding: 25px 20px;
+    }
+    
+    .benefits-icon {
+        margin-right: 0;
+        margin-bottom: 15px;
+    }
+    
+    .benefits-list {
+        padding: 20px;
+    }
+    
+    .benefit-item {
+        flex-direction: column;
+        text-align: center;
+        padding: 15px 0;
+    }
+    
+    .benefit-icon {
+        margin-right: 0;
+        margin-bottom: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-title {
+        font-size: 1.8rem;
+    }
+    
+    .register-title {
+        font-size: 1.5rem;
+    }
+    
+    .modern-input {
+        padding: 12px 12px 12px 45px;
+    }
+    
+    .btn-register {
+        padding: 12px;
+    }
+}</style>
 
 <script>
-// Проверка совпадения паролей
-document.getElementById('confirm_password').addEventListener('input', function() {
-    const password = document.getElementById('password').value;
-    const confirmPassword = this.value;
+// Password toggle functionality
+function togglePassword(fieldId) {
+    const passwordField = document.getElementById(fieldId);
+    const toggleIcon = document.getElementById(fieldId === 'password' ? 'toggleIcon1' : 'toggleIcon2');
     
-    if (password !== confirmPassword) {
-        this.setCustomValidity('Пароли не совпадают');
+    if (passwordField.type === 'password') {
+        passwordField.type = 'text';
+        toggleIcon.classList.remove('fa-eye');
+        toggleIcon.classList.add('fa-eye-slash');
     } else {
-        this.setCustomValidity('');
+        passwordField.type = 'password';
+        toggleIcon.classList.remove('fa-eye-slash');
+        toggleIcon.classList.add('fa-eye');
     }
+}
+
+// Password matching validation
+function checkPasswordMatch() {
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirm_password').value;
+    const matchIndicator = document.getElementById('passwordMatch');
+    const confirmField = document.getElementById('confirm_password');
+    
+    if (confirmPassword.length === 0) {
+        matchIndicator.textContent = '';
+        matchIndicator.className = 'password-match';
+        confirmField.classList.remove('is-valid', 'is-invalid');
+        return;
+    }
+    
+    if (password === confirmPassword) {
+        matchIndicator.textContent = '✓ Пароли совпадают';
+        matchIndicator.className = 'password-match match';
+        confirmField.classList.remove('is-invalid');
+        confirmField.classList.add('is-valid');
+        confirmField.setCustomValidity('');
+    } else {
+        matchIndicator.textContent = '✗ Пароли не совпадают';
+        matchIndicator.className = 'password-match no-match';
+        confirmField.classList.remove('is-valid');
+        confirmField.classList.add('is-invalid');
+        confirmField.setCustomValidity('Пароли не совпадают');
+    }
+}
+
+// Add event listeners when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    const inputs = document.querySelectorAll('.modern-input');
+    const passwordField = document.getElementById('password');
+    const confirmPasswordField = document.getElementById('confirm_password');
+    
+    // Add focus effects
+    inputs.forEach(input => {
+        input.addEventListener('focus', function() {
+            this.parentElement.querySelector('.input-icon').style.color = '#28a745';
+        });
+        
+        input.addEventListener('blur', function() {
+            this.parentElement.querySelector('.input-icon').style.color = '#adb5bd';
+        });
+    });
+    
+    // Password matching validation
+    passwordField.addEventListener('input', checkPasswordMatch);
+    confirmPasswordField.addEventListener('input', checkPasswordMatch);
 });
 </script>
+{% endblock %}
 {% endblock %}
