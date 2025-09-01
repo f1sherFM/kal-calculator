@@ -801,78 +801,102 @@ def add_food():
 @app.route('/profile', methods=['GET', 'POST'])
 @login_required
 def profile():
-    # Принудительное обновление сессии для получения свежих данных
-    db.session.expire_all()
+    try:
+        # Проверяем существование таблиц перед обращением к ним
+        try:
+            check_and_migrate_schema()
+        except Exception as migration_error:
+            logging.warning(f"Migration check failed, continuing anyway: {migration_error}")
+        
+        # Принудительное обновление сессии для получения свежих данных
+        db.session.expire_all()
+        
+        current_user = get_current_user()
+        if not current_user:
+            flash('Ошибка аутентификации. Пожалуйста, войдите в систему снова.', 'error')
+            return redirect(url_for('login'))
+        
+        user_profile = UserProfile.query.filter_by(user_id=current_user.id).first()
     
-    current_user = get_current_user()
-    if not current_user:
-        flash('Ошибка аутентификации. Пожалуйста, войдите в систему снова.', 'error')
-        return redirect(url_for('login'))
-    
-    user_profile = UserProfile.query.filter_by(user_id=current_user.id).first()
-    
-    if request.method == 'POST':
-        name = request.form['name']
-        age = int(request.form['age'])
-        gender = request.form['gender']
-        weight = float(request.form['weight'])
-        height = float(request.form['height'])
-        activity_level = request.form['activity_level']
-        goal = request.form['goal']
+        if request.method == 'POST':
+            name = request.form['name']
+            age = int(request.form['age'])
+            gender = request.form['gender']
+            weight = float(request.form['weight'])
+            height = float(request.form['height'])
+            activity_level = request.form['activity_level']
+            goal = request.form['goal']
+            
+            # Расчет целевых калорий по формуле Миффлина-Сан Жеора
+            if gender == 'male':
+                bmr = 10 * weight + 6.25 * height - 5 * age + 5
+            else:
+                bmr = 10 * weight + 6.25 * height - 5 * age - 161
+            
+            # Коэффициенты активности
+            activity_multipliers = {
+                'sedentary': 1.2,
+                'light': 1.375,
+                'moderate': 1.55,
+                'active': 1.725,
+                'very_active': 1.9
+            }
+            
+            tdee = bmr * activity_multipliers.get(activity_level, 1.2)
+            
+            # Корректировка по цели
+            if goal == 'lose':
+                target_calories = int(tdee - 500)  # дефицит 500 ккал
+            elif goal == 'gain':
+                target_calories = int(tdee + 500)  # профицит 500 ккал
+            else:
+                target_calories = int(tdee)
+            
+            if user_profile:
+                user_profile.name = name
+                user_profile.age = age
+                user_profile.gender = gender
+                user_profile.weight = weight
+                user_profile.height = height
+                user_profile.activity_level = activity_level
+                user_profile.goal = goal
+                user_profile.target_calories = target_calories
+            else:
+                user_profile = UserProfile(
+                    user_id=current_user.id,
+                    name=name,
+                    age=age,
+                    gender=gender,
+                    weight=weight,
+                    height=height,
+                    activity_level=activity_level,
+                    goal=goal,
+                    target_calories=target_calories
+                )
+                db.session.add(user_profile)
+            
+            db.session.commit()
+            flash('Профиль обновлен!', 'success')
+            return redirect(url_for('profile'))
         
-        # Расчет целевых калорий по формуле Миффлина-Сан Жеора
-        if gender == 'male':
-            bmr = 10 * weight + 6.25 * height - 5 * age + 5
-        else:
-            bmr = 10 * weight + 6.25 * height - 5 * age - 161
+        return render_template('profile.html', profile=user_profile, current_user=current_user)
         
-        # Коэффициенты активности
-        activity_multipliers = {
-            'sedentary': 1.2,
-            'light': 1.375,
-            'moderate': 1.55,
-            'active': 1.725,
-            'very_active': 1.9
-        }
+    except Exception as e:
+        logging.error(f"Database error in profile route: {str(e)}")
+        flash(f'Ошибка загрузки профиля: {str(e)}', 'error')
         
-        tdee = bmr * activity_multipliers.get(activity_level, 1.2)
+        # Попробуем выполнить миграцию
+        try:
+            logging.info("Attempting to fix database schema...")
+            with app.app_context():
+                check_and_migrate_schema()
+            flash('Попытка исправления схемы базы данных выполнена. Попробуйте обновить страницу.', 'info')
+        except Exception as migration_error:
+            logging.error(f"Migration fix failed: {str(migration_error)}")
+            flash(f'Не удалось исправить схему базы данных: {str(migration_error)}', 'error')
         
-        # Корректировка по цели
-        if goal == 'lose':
-            target_calories = int(tdee - 500)  # дефицит 500 ккал
-        elif goal == 'gain':
-            target_calories = int(tdee + 500)  # профицит 500 ккал
-        else:
-            target_calories = int(tdee)
-        
-        if user_profile:
-            user_profile.name = name
-            user_profile.age = age
-            user_profile.gender = gender
-            user_profile.weight = weight
-            user_profile.height = height
-            user_profile.activity_level = activity_level
-            user_profile.goal = goal
-            user_profile.target_calories = target_calories
-        else:
-            user_profile = UserProfile(
-                user_id=current_user.id,
-                name=name,
-                age=age,
-                gender=gender,
-                weight=weight,
-                height=height,
-                activity_level=activity_level,
-                goal=goal,
-                target_calories=target_calories
-            )
-            db.session.add(user_profile)
-        
-        db.session.commit()
-        flash('Профиль обновлен!', 'success')
-        return redirect(url_for('profile'))
-    
-    return render_template('profile.html', profile=user_profile, current_user=current_user)
+        # Возвращаем страницу с пустым профилем
+        return render_template('profile.html', profile=None, current_user=get_current_user())
 
 @app.route('/statistics')
 @login_required
@@ -920,12 +944,49 @@ def statistics():
     else:
         avg_calories = avg_protein = avg_carbs = avg_fat = 0
     
+    # Расчет прогресса целей и достижений
+    # 1. Постоянство (количество дней с записями за неделю)
+    days_with_entries = len(set(entry.date for entry in week_entries))
+    consistency_progress = min(round((days_with_entries / 7) * 100), 100)
+    
+    # 2. Баланс БЖУ (насколько близко к идеальному соотношению)
+    # Идеальное соотношение: белки 15-20%, жиры 20-35%, углеводы 45-65%
+    bju_balance_progress = 0
+    if avg_calories > 0:
+        protein_percent = (avg_protein * 4 / avg_calories) * 100
+        fat_percent = (avg_fat * 9 / avg_calories) * 100
+        carbs_percent = (avg_carbs * 4 / avg_calories) * 100
+        
+        # Проверяем, попадают ли значения в рекомендуемые диапазоны
+        protein_score = 100 if 15 <= protein_percent <= 20 else max(0, 100 - abs(protein_percent - 17.5) * 3)
+        fat_score = 100 if 20 <= fat_percent <= 35 else max(0, 100 - abs(fat_percent - 27.5) * 2)
+        carbs_score = 100 if 45 <= carbs_percent <= 65 else max(0, 100 - abs(carbs_percent - 55) * 2)
+        
+        bju_balance_progress = round((protein_score + fat_score + carbs_score) / 3)
+    
+    # 3. Цель по калориям (соответствие целевым калориям)
+    calorie_goal_progress = 0
+    user_profile = UserProfile.query.filter_by(user_id=current_user.id).first()
+    if user_profile and user_profile.target_calories and avg_calories > 0:
+        target_calories = user_profile.target_calories
+        # Считаем отклонение от цели (в пределах ±200 калорий считается успешным)
+        deviation = abs(avg_calories - target_calories)
+        if deviation <= 200:
+            calorie_goal_progress = 100
+        elif deviation <= 500:
+            calorie_goal_progress = max(0, 100 - (deviation - 200) / 3)
+        else:
+            calorie_goal_progress = 0
+    
     return render_template('statistics.html', 
                          daily_stats=daily_stats,
                          avg_calories=round(avg_calories, 0),
                          avg_protein=round(avg_protein, 1),
                          avg_carbs=round(avg_carbs, 1),
-                         avg_fat=round(avg_fat, 1))
+                         avg_fat=round(avg_fat, 1),
+                         consistency_progress=consistency_progress,
+                         bju_balance_progress=bju_balance_progress,
+                         calorie_goal_progress=round(calorie_goal_progress))
 
 @app.route('/delete_entry/<int:entry_id>')
 @login_required
@@ -1645,6 +1706,40 @@ def migrate_food_entries_route():
     except Exception as e:
         logging.error(f"Manual food_entries migration failed: {str(e)}")
         flash(f'Ошибка миграции food_entries: {str(e)}', 'error')
+        return redirect(url_for('index'))
+
+@app.route('/fix_profile_schema')
+def fix_profile_schema():
+    """Manual endpoint to fix profile-related database schema issues"""
+    try:
+        logging.info("Manual schema fix for profile requested")
+        
+        # Check and create tables if needed
+        with app.app_context():
+            db.create_all()
+            
+            # Run comprehensive migration
+            check_and_migrate_schema()
+            
+            # Verify UserProfile table structure
+            from sqlalchemy import text
+            user_profile_columns = db.session.execute(text(
+                "SELECT column_name FROM information_schema.columns WHERE table_name='user_profile'"
+            )).fetchall()
+            
+            column_names = [col[0] for col in user_profile_columns]
+            logging.info(f"UserProfile table columns: {column_names}")
+            
+            if 'user_id' not in column_names:
+                flash('Column user_id is missing from user_profile table. Running specific migration...', 'warning')
+                migrate_user_profile_table()
+            
+        flash('Схема базы данных для профиля исправлена! Попробуйте зайти в профиль снова.', 'success')
+        return redirect(url_for('index'))
+        
+    except Exception as e:
+        logging.error(f"Profile schema fix failed: {str(e)}")
+        flash(f'Ошибка исправления схемы профиля: {str(e)}', 'error')
         return redirect(url_for('index'))
 
 @app.route('/migrate_user_profile')
