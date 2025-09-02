@@ -2249,6 +2249,83 @@ def show_duplicates():
         logging.error(f"Ошибка при поиске дубликатов: {str(e)}")
         flash(f'Ошибка при поиске дубликатов: {str(e)}', 'danger')
         return redirect(url_for('products'))
+@app.route('/load_qwen_products')
+def load_qwen_products():
+    """Загружает продукты из JSON файла Qwen с разделением салатов на отдельную категорию"""
+    try:
+        import json
+        import os
+        
+        current_count = Product.query.count()
+        logging.info(f"Current product count before Qwen products: {current_count}")
+        
+        # Путь к JSON файлу
+        json_file_path = os.path.join(app.root_path, 'Qwen_json_20250902_g1jee3z69.json')
+        
+        if not os.path.exists(json_file_path):
+            flash('JSON файл с продуктами не найден!', 'error')
+            return redirect(url_for('products'))
+        
+        # Читаем JSON файл
+        with open(json_file_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        
+        added_count = 0
+        salad_count = 0
+        
+        for category_data in data['products']:
+            category_name = category_data['category']
+            
+            for item in category_data['items']:
+                name = item['name']
+                proteins = item['proteins']
+                fats = item['fats']
+                carbs = item['carbs']
+                
+                # Рассчитываем калории: белки*4 + жиры*9 + углеводы*4
+                calories = (proteins * 4) + (fats * 9) + (carbs * 4)
+                
+                # Определяем категорию - выделяем салаты отдельно
+                if category_name == "Салаты и гарниры":
+                    # Салаты выделяем в отдельную категорию
+                    if any(word in name.lower() for word in ['салат', 'винегрет', 'оливье', 'цезарь', 'руккола']):
+                        final_category = "Салаты"
+                        salad_count += 1
+                    else:
+                        final_category = "Гарниры"
+                else:
+                    final_category = category_name
+                
+                # Проверяем, нет ли уже такого продукта
+                existing_product = Product.query.filter_by(name=name).first()
+                if not existing_product:
+                    product = Product(
+                        name=name,
+                        calories_per_100g=round(calories, 1),
+                        protein=proteins,
+                        carbs=carbs,
+                        fat=fats,
+                        category=final_category
+                    )
+                    db.session.add(product)
+                    added_count += 1
+                else:
+                    logging.info(f"Product '{name}' already exists, skipping")
+        
+        db.session.commit()
+        
+        new_count = Product.query.count()
+        
+        flash(f'🎉 Успешно добавлено {added_count} продуктов из Qwen JSON! (в т.ч. {salad_count} салатов в отдельной категории). Общее количество: {new_count}', 'success')
+        logging.info(f"Added {added_count} Qwen products (including {salad_count} salads), total: {new_count}")
+        
+        return redirect(url_for('products'))
+        
+    except Exception as e:
+        logging.error(f"Error loading Qwen products: {str(e)}")
+        flash(f'Ошибка при загрузке продуктов Qwen: {str(e)}', 'error')
+        return redirect(url_for('products'))
+
 @app.route('/migrate_categories')
 def migrate_categories():
     """Миграция категорий: объединяем мясо и яйца в 'Мясо и птица'"""
