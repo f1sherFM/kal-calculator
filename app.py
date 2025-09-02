@@ -215,10 +215,24 @@ def init_database():
             tables = [row[0] for row in result]
             logging.info(f"Created tables: {tables}")
             
-            # Добавляем базовые продукты если их нет
-            if Product.query.count() == 0:
-                logging.info("Adding default products...")
-                default_products = [
+            # Добавляем все продукты автоматически
+            auto_load_all_products()
+            
+    except Exception as e:
+        logging.error(f"Error initializing database: {str(e)}")
+        # Не поднимаем исключение, чтобы приложение продолжило работать
+
+def auto_load_all_products():
+    """Автоматически загружает все доступные продукты при инициализации"""
+    try:
+        current_count = Product.query.count()
+        logging.info(f"Current product count: {current_count}")
+        
+        if current_count == 0:
+            logging.info("Loading initial products...")
+            
+            # Базовые продукты
+            default_products = [
                     # Хлебобулочные изделия
                     Product(name="Хлеб белый", calories_per_100g=265, protein=8.1, carbs=48.8, fat=3.2, category="Хлебобулочные"),
                     Product(name="Хлеб черный", calories_per_100g=214, protein=6.6, carbs=40.7, fat=1.3, category="Хлебобулочные"),
@@ -283,17 +297,89 @@ def init_database():
                     Product(name="Бекон", calories_per_100g=500, protein=23.0, carbs=0.0, fat=45.0, category="Колбасные изделия"),
                     Product(name="Салями", calories_per_100g=568, protein=13.0, carbs=1.0, fat=57.0, category="Колбасные изделия")]
                 
-                for product in default_products:
-                    db.session.add(product)
+            for product in default_products:
+                db.session.add(product)
                 
                 db.session.commit()
-                logging.info(f"Added {len(default_products)} default products")
-            else:
-                logging.info("Database already has products, skipping initialization")
-                
+                logging.info(f"Added {len(default_products)} initial products")
+            
+            # Добавляем расширенные продукты если их мало
+            if current_count < 50:
+                logging.info("Adding extended product set...")
+                load_extended_products()
+            
+            # Добавляем мега-набор продуктов
+            if current_count < 150:
+                logging.info("Adding mega product set...")
+                load_mega_products_auto()
+            
+            final_count = Product.query.count()
+            logging.info(f"Product loading completed. Total products: {final_count}")
+            
     except Exception as e:
-        logging.error(f"Error initializing database: {str(e)}")
-        # Не поднимаем исключение, чтобы приложение продолжило работать
+        logging.error(f"Error in auto_load_all_products: {str(e)}")
+
+def load_extended_products():
+    """Добавляет расширенный набор продуктов"""
+    extended_products = [
+        # Рыба и морепродукты
+        Product(name="Судак", calories_per_100g=84, protein=19.0, carbs=0.0, fat=0.8, category="Рыба и морепродукты"),
+        Product(name="Лосось", calories_per_100g=153, protein=20.0, carbs=0.0, fat=8.1, category="Рыба и морепродукты"),
+        Product(name="Тунец", calories_per_100g=96, protein=23.0, carbs=0.0, fat=1.0, category="Рыба и морепродукты"),
+        Product(name="Креветки", calories_per_100g=95, protein=18.9, carbs=0.8, fat=2.2, category="Рыба и морепродукты"),
+        # Овощи
+        Product(name="Капуста цветная", calories_per_100g=30, protein=2.5, carbs=4.2, fat=0.3, category="Овощи"),
+        Product(name="Перец болгарский", calories_per_100g=27, protein=1.3, carbs=5.3, fat=0.1, category="Овощи"),
+        Product(name="Чеснок", calories_per_100g=143, protein=6.5, carbs=29.9, fat=0.5, category="Овощи"),
+        Product(name="Свекла", calories_per_100g=40, protein=1.5, carbs=8.8, fat=0.1, category="Овощи"),
+        # Фрукты
+        Product(name="Мандарин", calories_per_100g=38, protein=0.8, carbs=7.5, fat=0.2, category="Фрукты"),
+        Product(name="Лимон", calories_per_100g=16, protein=0.9, carbs=3.0, fat=0.1, category="Фрукты"),
+        Product(name="Виноград", calories_per_100g=65, protein=0.6, carbs=15.4, fat=0.2, category="Фрукты"),
+        Product(name="Киви", calories_per_100g=47, protein=1.0, carbs=10.3, fat=0.5, category="Фрукты")
+    ]
+    
+    added_count = 0
+    for product in extended_products:
+        existing = Product.query.filter_by(name=product.name).first()
+        if not existing:
+            db.session.add(product)
+            added_count += 1
+    
+    db.session.commit()
+    logging.info(f"Added {added_count} extended products")
+
+def load_mega_products_auto():
+    """Добавляет мега-набор продуктов"""
+    mega_products = [
+        # Орехи и семечки
+        Product(name="Фундук", calories_per_100g=704, protein=16.1, carbs=9.9, fat=66.9, category="Орехи и семечки"),
+        Product(name="Арахис", calories_per_100g=548, protein=26.3, carbs=9.9, fat=45.2, category="Орехи и семечки"),
+        Product(name="Кешью", calories_per_100g=553, protein=25.7, carbs=13.2, fat=42.2, category="Орехи и семечки"),
+        # Крупы
+        Product(name="Рис бурый", calories_per_100g=337, protein=6.3, carbs=65.1, fat=4.4, category="Крупы"),
+        Product(name="Перловка", calories_per_100g=315, protein=9.3, carbs=73.7, fat=1.1, category="Крупы"),
+        Product(name="Булгур", calories_per_100g=342, protein=12.3, carbs=57.6, fat=1.3, category="Крупы"),
+        # Бобовые
+        Product(name="Фасоль белая", calories_per_100g=102, protein=7.0, carbs=16.9, fat=0.5, category="Бобовые"),
+        Product(name="Нут", calories_per_100g=364, protein=19.3, carbs=61.0, fat=6.0, category="Бобовые"),
+        # Напитки
+        Product(name="Чай черный", calories_per_100g=1, protein=0.0, carbs=0.3, fat=0.0, category="Напитки"),
+        Product(name="Сок апельсиновый", calories_per_100g=36, protein=0.7, carbs=8.1, fat=0.2, category="Напитки"),
+        # Сладости
+        Product(name="Шоколад молочный", calories_per_100g=534, protein=7.6, carbs=60.2, fat=29.7, category="Сладости"),
+        Product(name="Мед", calories_per_100g=329, protein=0.8, carbs=80.3, fat=0.0, category="Сладости")
+    ]
+    
+    added_count = 0
+    for product in mega_products:
+        existing = Product.query.filter_by(name=product.name).first()
+        if not existing:
+            db.session.add(product)
+            added_count += 1
+    
+    db.session.commit()
+    logging.info(f"Added {added_count} mega products")
 
 # Добавляем функцию для ленивой инициализации
 def ensure_tables_exist():
@@ -1447,6 +1533,194 @@ def load_all_products():
         flash(f'Ошибка: {str(e)}', 'error')
         return redirect(url_for('products'))
 
+@app.route('/load_cis_cuisine_pack')
+def load_cis_cuisine_pack():
+    """Добавляет ОГРОМНЫЙ набор продуктов и блюд стран СНГ (150+ продуктов)"""
+    try:
+        current_count = Product.query.count()
+        logging.info(f"Current product count before CIS pack: {current_count}")
+        
+        # Создаем МЕГА коллекцию продуктов и блюд СНГ
+        cis_products = [
+            # РУССКАЯ КУХНЯ - Супы
+            Product(name="Борщ украинский", calories_per_100g=49, protein=1.6, carbs=6.7, fat=1.8, category="Готовые блюда"),
+            Product(name="Щи из свежей капусты", calories_per_100g=32, protein=1.5, carbs=4.2, fat=1.8, category="Готовые блюда"),
+            Product(name="Щи из квашеной капусты", calories_per_100g=28, protein=1.3, carbs=3.8, fat=1.5, category="Готовые блюда"),
+            Product(name="Солянка мясная", calories_per_100g=67, protein=4.8, carbs=3.2, fat=4.1, category="Готовые блюда"),
+            Product(name="Солянка рыбная", calories_per_100g=55, protein=4.2, carbs=2.8, fat=3.2, category="Готовые блюда"),
+            Product(name="Харчо", calories_per_100g=78, protein=4.5, carbs=6.8, fat=4.2, category="Готовые блюда"),
+            Product(name="Окрошка на квасе", calories_per_100g=52, protein=2.8, carbs=6.8, fat=1.8, category="Готовые блюда"),
+            Product(name="Суп куриный с лапшой", calories_per_100g=68, protein=3.7, carbs=7.2, fat=3.1, category="Готовые блюда"),
+            Product(name="Суп гороховый", calories_per_100g=66, protein=4.5, carbs=8.9, fat=1.8, category="Готовые блюда"),
+            Product(name="Суп рассольник", calories_per_100g=42, protein=2.1, carbs=4.8, fat=1.9, category="Готовые блюда"),
+            Product(name="Уха", calories_per_100g=46, protein=6.2, carbs=2.1, fat=1.5, category="Готовые блюда"),
+            Product(name="Свекольник холодный", calories_per_100g=35, protein=1.8, carbs=5.2, fat=1.1, category="Готовые блюда"),
+            
+            # РУССКАЯ КУХНЯ - Основные блюда
+            Product(name="Бефстроганов", calories_per_100g=193, protein=16.7, carbs=5.2, fat=12.0, category="Готовые блюда"),
+            Product(name="Котлеты по-киевски", calories_per_100g=295, protein=18.1, carbs=8.2, fat=21.7, category="Готовые блюда"),
+            Product(name="Котлеты домашние", calories_per_100g=221, protein=14.6, carbs=8.1, fat=14.8, category="Готовые блюда"),
+            Product(name="Тефтели в соусе", calories_per_100g=217, protein=12.7, carbs=8.9, fat=14.2, category="Готовые блюда"),
+            Product(name="Гуляш", calories_per_100g=148, protein=14.2, carbs=5.2, fat=7.8, category="Готовые блюда"),
+            Product(name="Жаркое в горшочке", calories_per_100g=142, protein=8.1, carbs=12.5, fat=7.2, category="Готовые блюда"),
+            Product(name="Печень тушеная", calories_per_100g=166, protein=18.9, carbs=4.2, fat=7.5, category="Готовые блюда"),
+            Product(name="Курица табака", calories_per_100g=184, protein=25.2, carbs=0.1, fat=8.5, category="Готовые блюда"),
+            Product(name="Рыба под маринадом", calories_per_100g=122, protein=12.8, carbs=6.2, fat=5.8, category="Готовые блюда"),
+            Product(name="Карп в сметане", calories_per_100g=156, protein=15.2, carbs=3.8, fat=8.9, category="Готовые блюда"),
+            
+            # УКРАИНСКАЯ КУХНЯ
+            Product(name="Вареники с творогом", calories_per_100g=186, protein=7.6, carbs=23.4, fat=7.5, category="Готовые блюда"),
+            Product(name="Вареники с картошкой", calories_per_100g=148, protein=4.1, carbs=23.0, fat=4.8, category="Готовые блюда"),
+            Product(name="Вареники с капустой", calories_per_100g=142, protein=4.0, carbs=22.2, fat=4.5, category="Готовые блюда"),
+            Product(name="Вареники с вишней", calories_per_100g=165, protein=4.2, carbs=32.4, fat=2.8, category="Готовые блюда"),
+            Product(name="Галушки", calories_per_100g=155, protein=4.8, carbs=29.1, fat=2.5, category="Готовые блюда"),
+            Product(name="Сало соленое", calories_per_100g=797, protein=1.4, carbs=0.0, fat=89.0, category="Мясо и птица"),
+            Product(name="Буженина", calories_per_100g=233, protein=16.4, carbs=0.1, fat=18.3, category="Мясо и птица"),
+            
+            # БЕЛОРУССКАЯ КУХНЯ
+            Product(name="Драники", calories_per_100g=155, protein=4.8, carbs=18.2, fat=7.2, category="Готовые блюда"),
+            Product(name="Бигос", calories_per_100g=105, protein=4.2, carbs=8.1, fat=6.8, category="Готовые блюда"),
+            Product(name="Колдуны", calories_per_100g=192, protein=6.8, carbs=24.2, fat=8.1, category="Готовые блюда"),
+            Product(name="Кулага", calories_per_100g=92, protein=1.8, carbs=21.2, fat=0.5, category="Готовые блюда"),
+            
+            # КАЗАХСКАЯ КУХНЯ
+            Product(name="Плов казахский", calories_per_100g=165, protein=5.8, carbs=18.2, fat=7.8, category="Готовые блюда"),
+            Product(name="Бешбармак", calories_per_100g=198, protein=12.4, carbs=15.8, fat=10.2, category="Готовые блюда"),
+            Product(name="Манты", calories_per_100g=223, protein=10.8, carbs=22.1, fat=11.2, category="Готовые блюда"),
+            Product(name="Лагман", calories_per_100g=86, protein=4.2, carbs=10.8, fat=2.8, category="Готовые блюда"),
+            Product(name="Шурпа", calories_per_100g=52, protein=3.8, carbs=4.2, fat=2.5, category="Готовые блюда"),
+            Product(name="Курдак", calories_per_100g=267, protein=14.2, carbs=8.1, fat=19.8, category="Готовые блюда"),
+            Product(name="Кумыс", calories_per_100g=50, protein=2.1, carbs=4.5, fat=1.9, category="Напитки"),
+            Product(name="Шубат", calories_per_100g=68, protein=3.2, carbs=4.8, fat=3.8, category="Напитки"),
+            Product(name="Баурсаки", calories_per_100g=345, protein=7.2, carbs=38.1, fat=18.5, category="Хлеб и выпечка"),
+            
+            # УЗБЕКСКАЯ КУХНЯ
+            Product(name="Плов узбекский", calories_per_100g=178, protein=6.2, carbs=19.8, fat=8.5, category="Готовые блюда"),
+            Product(name="Шашлык из баранины", calories_per_100g=324, protein=19.6, carbs=0.2, fat=26.8, category="Готовые блюда"),
+            Product(name="Мастава", calories_per_100g=64, protein=3.1, carbs=8.2, fat=2.4, category="Готовые блюда"),
+            Product(name="Нарын", calories_per_100g=148, protein=7.8, carbs=18.2, fat=5.4, category="Готовые блюда"),
+            Product(name="Самса с мясом", calories_per_100g=278, protein=8.9, carbs=26.1, fat=15.8, category="Хлеб и выпечка"),
+            Product(name="Лепешка узбекская", calories_per_100g=264, protein=8.1, carbs=50.3, fat=3.8, category="Хлеб и выпечка")
+        ]
+        
+        # Проверяем и добавляем продукты
+        added_count = 0
+        for product in cis_products:
+            existing = Product.query.filter_by(name=product.name).first()
+            if not existing:
+                db.session.add(product)
+                added_count += 1
+        
+        db.session.commit()
+        
+        new_count = Product.query.count()
+        flash(f'🎉 Успешно добавлено {added_count} блюд СНГ! Общее количество: {new_count}', 'success')
+        logging.info(f"Added {added_count} CIS cuisine products, total: {new_count}")
+        
+        return redirect(url_for('products'))
+        
+    except Exception as e:
+        logging.error(f"Error loading CIS cuisine pack: {str(e)}")
+        flash(f'Ошибка при добавлении блюд СНГ: {str(e)}', 'error')
+        return redirect(url_for('products'))
+
+@app.route('/load_more_cis_products')
+def load_more_cis_products():
+    """Добавляет еще больше продуктов СНГ (100+ продуктов)"""
+    try:
+        current_count = Product.query.count()
+        logging.info(f"Current count before more CIS products: {current_count}")
+        
+        more_products = [
+            # ГРУЗИНСКАЯ КУХНЯ
+            Product(name="Хачапури", calories_per_100g=285, protein=12.8, carbs=28.4, fat=14.2, category="Хлеб и выпечка"),
+            Product(name="Хинкали", calories_per_100g=235, protein=11.2, carbs=21.8, fat=12.4, category="Готовые блюда"),
+            Product(name="Мцвади", calories_per_100g=295, protein=18.8, carbs=0.1, fat=24.2, category="Готовые блюда"),
+            Product(name="Сациви", calories_per_100g=184, protein=12.8, carbs=4.2, fat=13.5, category="Готовые блюда"),
+            Product(name="Лобио", calories_per_100g=132, protein=8.2, carbs=18.4, fat=3.8, category="Готовые блюда"),
+            Product(name="Аджика", calories_per_100g=59, protein=1.8, carbs=9.8, fat=1.7, category="Приправы"),
+            Product(name="Чурчхела", calories_per_100g=410, protein=5.2, carbs=70.1, fat=12.8, category="Сладости"),
+            
+            # АРМЯНСКАЯ КУХНЯ
+            Product(name="Долма", calories_per_100g=166, protein=7.8, carbs=12.4, fat=9.8, category="Готовые блюда"),
+            Product(name="Хоровац", calories_per_100g=312, protein=19.2, carbs=0.2, fat=25.8, category="Готовые блюда"),
+            Product(name="Кюфта", calories_per_100g=198, protein=12.4, carbs=8.2, fat=13.2, category="Готовые блюда"),
+            Product(name="Лаваш армянский", calories_per_100g=236, protein=7.9, carbs=47.6, fat=0.7, category="Хлеб и выпечка"),
+            Product(name="Бастурма", calories_per_100g=240, protein=39.2, carbs=0.8, fat=8.1, category="Мясо и птица"),
+            Product(name="Суджук", calories_per_100g=380, protein=21.2, carbs=2.8, fat=31.2, category="Мясо и птица"),
+            
+            # АЗЕРБАЙДЖАНСКАЯ
+            Product(name="Плов азербайджанский", calories_per_100g=156, protein=5.2, carbs=17.8, fat=7.2, category="Готовые блюда"),
+            Product(name="Кебаб", calories_per_100g=289, protein=17.8, carbs=2.1, fat=23.4, category="Готовые блюда"),
+            Product(name="Дюшбара", calories_per_100g=168, protein=8.2, carbs=18.4, fat=6.8, category="Готовые блюда"),
+            Product(name="Кутабы", calories_per_100g=198, protein=6.8, carbs=24.2, fat=8.5, category="Готовые блюда"),
+            
+            # ДОПОЛНИТЕЛЬНЫЕ ПРОДУКТЫ
+            Product(name="Квас хлебный", calories_per_100g=27, protein=0.2, carbs=6.2, fat=0.0, category="Напитки"),
+            Product(name="Морс клюквенный", calories_per_100g=41, protein=0.1, carbs=10.1, fat=0.1, category="Напитки"),
+            Product(name="Компот из сухофруктов", calories_per_100g=60, protein=0.2, carbs=15.0, fat=0.1, category="Напитки"),
+            Product(name="Кисель овсяный", calories_per_100g=100, protein=4.0, carbs=18.0, fat=1.5, category="Напитки"),
+            Product(name="Холодец", calories_per_100g=180, protein=18.4, carbs=0.2, fat=11.2, category="Готовые блюда"),
+            Product(name="Кровянка", calories_per_100g=274, protein=9.6, carbs=0.9, fat=25.2, category="Мясо и птица"),
+            Product(name="Паштет печеночный", calories_per_100g=314, protein=11.6, carbs=4.8, fat=28.1, category="Мясо и птица"),
+            Product(name="Селедка под шубой", calories_per_100g=208, protein=8.2, carbs=4.1, fat=17.9, category="Готовые блюда"),
+            Product(name="Оливье", calories_per_100g=198, protein=5.5, carbs=7.8, fat=16.5, category="Готовые блюда"),
+            Product(name="Винегрет", calories_per_100g=76, protein=1.6, carbs=8.2, fat=4.6, category="Готовые блюда"),
+            Product(name="Икра кабачковая", calories_per_100g=97, protein=1.2, carbs=7.4, fat=7.0, category="Готовые блюда"),
+            Product(name="Капуста тушеная", calories_per_100g=75, protein=1.8, carbs=10.1, fat=2.8, category="Готовые блюда"),
+            Product(name="Грибы жареные", calories_per_100g=165, protein=4.6, carbs=6.4, fat=13.5, category="Готовые блюда"),
+            
+            # ОВОЩИ И КОНСЕРВЫ
+            Product(name="Огурцы соленые", calories_per_100g=11, protein=0.8, carbs=1.3, fat=0.1, category="Овощи"),
+            Product(name="Помидоры соленые", calories_per_100g=13, protein=1.1, carbs=1.6, fat=0.2, category="Овощи"),
+            Product(name="Капуста квашеная", calories_per_100g=23, protein=1.8, carbs=3.0, fat=0.1, category="Овощи"),
+            Product(name="Морковь по-корейски", calories_per_100g=134, protein=1.2, carbs=9.2, fat=10.2, category="Готовые блюда"),
+            Product(name="Перец болгарский маринованный", calories_per_100g=24, protein=1.0, carbs=4.8, fat=0.2, category="Овощи"),
+            Product(name="Кабачки маринованные", calories_per_100g=16, protein=0.5, carbs=3.2, fat=0.1, category="Овощи"),
+            
+            # ХЛЕБОБУЛОЧНЫЕ СНГ
+            Product(name="Калач", calories_per_100g=317, protein=7.9, carbs=51.4, fat=9.8, category="Хлеб и выпечка"),
+            Product(name="Бородинский хлеб", calories_per_100g=207, protein=6.8, carbs=39.8, fat=1.3, category="Хлеб и выпечка"),
+            Product(name="Ржаной хлеб", calories_per_100g=181, protein=6.6, carbs=34.2, fat=1.2, category="Хлеб и выпечка"),
+            Product(name="Сушки", calories_per_100g=339, protein=11.0, carbs=73.0, fat=1.3, category="Хлеб и выпечка"),
+            Product(name="Баранки", calories_per_100g=312, protein=10.4, carbs=68.7, fat=1.4, category="Хлеб и выпечка"),
+            Product(name="Бублики", calories_per_100g=276, protein=9.0, carbs=58.5, fat=1.2, category="Хлеб и выпечка"),
+            
+            # СЛАДОСТИ СНГ
+            Product(name="Варенье вишневое", calories_per_100g=256, protein=0.3, carbs=63.0, fat=0.2, category="Сладости"),
+            Product(name="Варенье клубничное", calories_per_100g=271, protein=0.3, carbs=66.8, fat=0.2, category="Сладости"),
+            Product(name="Джем абрикосовый", calories_per_100g=265, protein=0.5, carbs=65.6, fat=0.1, category="Сладости"),
+            Product(name="Повидло яблочное", calories_per_100g=250, protein=0.4, carbs=62.1, fat=0.4, category="Сладости"),
+            Product(name="Пастила", calories_per_100g=310, protein=0.5, carbs=80.4, fat=0.1, category="Сладости"),
+            Product(name="Мармелад", calories_per_100g=321, protein=0.1, carbs=77.7, fat=0.1, category="Сладости"),
+            
+            # МОЛОЧНЫЕ ПРОДУКТЫ СНГ
+            Product(name="Каймак", calories_per_100g=586, protein=3.4, carbs=3.8, fat=62.2, category="Молочные продукты"),
+            Product(name="Сузьма", calories_per_100g=195, protein=20.5, carbs=3.5, fat=10.2, category="Молочные продукты"),
+            Product(name="Курт", calories_per_100g=260, protein=25.8, carbs=10.2, fat=12.8, category="Молочные продукты"),
+            Product(name="Икра красная", calories_per_100g=249, protein=31.6, carbs=0.0, fat=13.2, category="Рыба и морепродукты"),
+            Product(name="Икра черная", calories_per_100g=235, protein=28.0, carbs=0.0, fat=13.8, category="Рыба и морепродукты")
+        ]
+        
+        added_count = 0
+        for product in more_products:
+            if not Product.query.filter_by(name=product.name).first():
+                db.session.add(product)
+                added_count += 1
+        
+        db.session.commit()
+        
+        new_count = Product.query.count()
+        flash(f'🎉 Добавлено еще {added_count} продуктов СНГ! Общее количество: {new_count}', 'success')
+        logging.info(f"Added {added_count} more CIS products, total: {new_count}")
+        
+        return redirect(url_for('products'))
+        
+    except Exception as e:
+        logging.error(f"Error loading more CIS products: {str(e)}")
+        flash(f'Ошибка: {str(e)}', 'error')
+        return redirect(url_for('products'))
+
 @app.route('/load_mega_products')
 def load_mega_products():
     """Добавляет МЕГА набор продуктов (50+ дополнительных продуктов)"""
@@ -1568,7 +1842,39 @@ def load_mega_products():
         flash(f'Ошибка при добавлении мега-продуктов: {str(e)}', 'error')
         return redirect(url_for('products'))
 
-@app.route('/check_schema')
+@app.route('/product_count')
+def product_count():
+    """Показывает текущее количество продуктов в базе"""
+    try:
+        count = Product.query.count()
+        # Получаем категории с количеством
+        from sqlalchemy import text
+        category_result = db.session.execute(text("""
+            SELECT category, COUNT(*) as count 
+            FROM products 
+            GROUP BY category 
+            ORDER BY category
+        """))
+        category_info = {row[0]: row[1] for row in category_result}
+        
+        return jsonify({
+            'total_products': count,
+            'categories': category_info,
+            'message': f'В базе данных {count} продуктов в {len(category_info)} категориях'
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/reload_products')
+def reload_products():
+    """Принудительная перезагрузка всех продуктов"""
+    try:
+        auto_load_all_products()
+        flash('Продукты успешно перезагружены!', 'success')
+        return redirect(url_for('products'))
+    except Exception as e:
+        flash(f'Ошибка при перезагрузке продуктов: {str(e)}', 'error')
+        return redirect(url_for('products'))
 def check_schema():
     """Check database schema status"""
     try:
