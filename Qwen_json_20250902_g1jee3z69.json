@@ -1,0 +1,136 @@
+{
+  "products": [
+    {
+      "category": "Базовые продукты",
+      "items": [
+        { "name": "Овсянка (сухая)", "proteins": 12.3, "fats": 6.9, "carbs": 66.0 },
+        { "name": "Гречка (сухая)", "proteins": 12.6, "fats": 3.3, "carbs": 62.1 },
+        { "name": "Рис белый (сухой)", "proteins": 7.0, "fats": 0.7, "carbs": 79.8 },
+        { "name": "Рис коричневый (сухой)", "proteins": 7.9, "fats": 2.2, "carbs": 77.2 },
+        { "name": "Киноа (сухая)", "proteins": 14.1, "fats": 6.1, "carbs": 64.2 },
+        { "name": "Булгур (сухой)", "proteins": 12.3, "fats": 1.8, "carbs": 75.9 },
+        { "name": "Чечевица (сухая)", "proteins": 25.0, "fats": 1.0, "carbs": 60.0 },
+        { "name": "Фасоль (сухая)", "proteins": 22.0, "fats": 1.5, "carbs": 60.0 },
+        { "name": "Куриная грудка (отварная)", "proteins": 23.0, "fats": 1.9, "carbs": 0.0 },
+        { "name": "Индейка (филе, отварное)", "proteins": 23.5, "fats": 1.5, "carbs": 0.0 },
+        { "name": "Говядина (постная, отварная)", "proteins": 22.0, "fats": 3.0, "carbs": 0.0 },
+        { "name": "Свинина (вырезка, отварная)", "proteins": 22.5, "fats": 4.0, "carbs": 0.0 },
+        { "name": "Лосось (свежий, запечённый)", "proteins": 20.4, "fats": 13.0, "carbs": 0.0 },
+        { "name": "Тунец (в собственном соку)", "proteins": 23.0, "fats": 1.0, "carbs": 0.0 },
+        { "name": "Яйцо куриное (отварное)", "proteins": 12.7, "fats": 11.5, "carbs": 0.7 },
+        { "name": "Творог 0%", "proteins": 18.0, "fats": 0.0, "carbs": 3.0 },
+        { "name": "Творог 5%", "proteins": 17.0, "fats": 5.0, "carbs": 3.0 },
+        { "name": "Йогурт натуральный 1.5%", "proteins": 4.0, "fats": 1.5, "carbs": 5.0 },
+        { "name": "Греческий йогурт 2%", "proteins": 10.0, "fats": 2.0, "carbs": 4.0 },
+        { "name": "Молоко 3.2%", "proteins": 3.0, "fats": 3.2, "carbs": 4.7 },
+        { "name": "Соевое молоко (несладкое)", "proteins": 3.0, "fats": 2.0, "carbs": 3.0 },
+        { "name": "Сыр адамский", "proteins": 17.0, "fats": 6.0, "carbs": 0.0 },
+        { "name": "Сыр моцарелла", "proteins": 19.0, "fats": 16.0, "carbs": 2.0 },
+        { "name": "Сыр чеддер", "proteins": 25.0, "fats": 33.0, "carbs": 1.0 },
+        { "name": "Хлеб ржаной", "proteins": 6.0, "fats": 1.5, "carbs": 42.0 },
+        { "name": "Хлеб цельнозерновой", "proteins": 8.0, "fats": 2.0, "carbs": 45.0 },
+        { "name": "Авокадо", "proteins": 2.0, "fats": 15.0, "carbs": 9.0 }
+      ]
+    },
+    {
+      "category": "Салаты и гарниры",
+      "items": [
+        { "name": "Греческий салат", "proteins": 3.0, "fats": 12.0, "carbs": 5.0 },
+        { "name": "Овощной салат (огурцы, помидоры и др.)", "proteins": 1.0, "fats": 0.3, "carbs": 3.0 },
+        { "name": "Цезарь с курицей", "proteins": 10.0, "fats": 15.0, "carbs": 6.0 },
+        { "name": "Салат с киноа и овощами", "proteins": 6.0, "fats": 7.0, "carbs": 15.0 },
+        { "name": "Винегрет", "proteins": 2.0, "fats": 4.0, "carbs": 12.0 },
+        { "name": "Оливье (с колбасой)", "proteins": 5.0, "fats": 12.0, "carbs": 10.0 },
+        { "name": "Капустный салат (с майонезом)", "proteins": 2.0, "fats": 10.0, "carbs": 8.0 },
+        { "name": "Салат из шпината с орехами и ягодами", "proteins": 4.0, "fats": 11.0, "carbs": 7.0 },
+        { "name": "Руккола с пармезаном и томатами черри", "proteins": 4.0, "fats": 10.0, "carbs": 3.0 },
+        { "name": "Картофель отварной", "proteins": 2.0, "fats": 0.1, "carbs": 17.0 },
+        { "name": "Картофель запечённый", "proteins": 2.0, "fats": 0.5, "carbs": 17.0 }
+      ]
+    },
+    {
+      "category": "Готовые блюда",
+      "items": [
+        { "name": "Паста с томатным соусом", "proteins": 8.0, "fats": 5.0, "carbs": 30.0 },
+        { "name": "Паста с курицей и овощами", "proteins": 10.0, "fats": 7.0, "carbs": 28.0 },
+        { "name": "Лазанья", "proteins": 12.0, "fats": 15.0, "carbs": 20.0 },
+        { "name": "Ризотто с грибами", "proteins": 7.0, "fats": 10.0, "carbs": 25.0 },
+        { "name": "Суп-пюре из тыквы", "proteins": 2.0, "fats": 4.0, "carbs": 8.0 },
+        { "name": "Куриный суп с лапшой", "proteins": 5.0, "fats": 3.0, "carbs": 12.0 },
+        { "name": "Борщ", "proteins": 2.0, "fats": 4.0, "carbs": 10.0 },
+        { "name": "Щи", "proteins": 2.0, "fats": 3.0, "carbs": 8.0 },
+        { "name": "Плов (с курицей)", "proteins": 10.0, "fats": 8.0, "carbs": 25.0 },
+        { "name": "Шашлык (курица)", "proteins": 18.0, "fats": 12.0, "carbs": 1.0 },
+        { "name": "Запечённая рыба с овощами", "proteins": 15.0, "fats": 10.0, "carbs": 6.0 },
+        { "name": "Овощи на гриле", "proteins": 1.5, "fats": 8.0, "carbs": 7.0 },
+        { "name": "Запечённая картошка с сыром", "proteins": 6.0, "fats": 10.0, "carbs": 18.0 },
+        { "name": "Драники (с творогом)", "proteins": 6.0, "fats": 9.0, "carbs": 20.0 },
+        { "name": "Блины (с творогом)", "proteins": 8.0, "fats": 6.0, "carbs": 20.0 }
+      ]
+    },
+    {
+      "category": "Закуски и перекусы",
+      "items": [
+        { "name": "Сэндвич с курицей и овощами", "proteins": 10.0, "fats": 8.0, "carbs": 20.0 },
+        { "name": "Бутерброд с авокадо и яйцом", "proteins": 8.0, "fats": 14.0, "carbs": 15.0 },
+        { "name": "Хумус", "proteins": 8.0, "fats": 14.0, "carbs": 13.0 },
+        { "name": "Миндаль (очищенный)", "proteins": 21.0, "fats": 49.0, "carbs": 22.0 },
+        { "name": "Грецкие орехи", "proteins": 15.0, "fats": 65.0, "carbs": 14.0 },
+        { "name": "Фундук", "proteins": 15.0, "fats": 61.0, "carbs": 10.0 },
+        { "name": "Курага", "proteins": 5.0, "fats": 0.5, "carbs": 63.0 },
+        { "name": "Чернослив", "proteins": 2.0, "fats": 0.7, "carbs": 64.0 },
+        { "name": "Изюм", "proteins": 3.0, "fats": 0.5, "carbs": 79.0 },
+        { "name": "Йогуртовый парфе с орехами", "proteins": 6.0, "fats": 10.0, "carbs": 20.0 },
+        { "name": "Батончики мюсли", "proteins": 7.0, "fats": 12.0, "carbs": 60.0 },
+        { "name": "Фруктовый салат", "proteins": 1.0, "fats": 0.3, "carbs": 12.0 },
+        { "name": "Сырные палочки", "proteins": 14.0, "fats": 18.0, "carbs": 3.0 },
+        { "name": "Куриные крылышки (запечённые)", "proteins": 20.0, "fats": 12.0, "carbs": 0.0 }
+      ]
+    },
+    {
+      "category": "Десерты",
+      "items": [
+        { "name": "Запечённые яблоки с корицей", "proteins": 0.3, "fats": 0.2, "carbs": 15.0 },
+        { "name": "Творожная запеканка", "proteins": 12.0, "fats": 10.0, "carbs": 20.0 },
+        { "name": "Рисовый пудинг", "proteins": 4.0, "fats": 5.0, "carbs": 22.0 },
+        { "name": "Медовик (домашний)", "proteins": 6.0, "fats": 15.0, "carbs": 45.0 },
+        { "name": "Чизкейк (нью-йорк)", "proteins": 7.0, "fats": 25.0, "carbs": 28.0 },
+        { "name": "Брауни", "proteins": 5.0, "fats": 20.0, "carbs": 50.0 },
+        { "name": "Мороженое (пломбир)", "proteins": 3.5, "fats": 15.0, "carbs": 25.0 },
+        { "name": "Шоколад 70% какао", "proteins": 8.0, "fats": 40.0, "carbs": 45.0 },
+        { "name": "Зефир", "proteins": 2.0, "fats": 0.0, "carbs": 80.0 },
+        { "name": "Печенье овсяное", "proteins": 6.0, "fats": 10.0, "carbs": 65.0 }
+      ]
+    },
+    {
+      "category": "Напитки",
+      "items": [
+        { "name": "Кофе чёрный", "proteins": 0.0, "fats": 0.0, "carbs": 0.0 },
+        { "name": "Кофе с молоком (1.5%)", "proteins": 1.0, "fats": 1.0, "carbs": 2.0 },
+        { "name": "Латте (на цельном молоке)", "proteins": 3.0, "fats": 3.0, "carbs": 5.0 },
+        { "name": "Зелёный чай", "proteins": 0.0, "fats": 0.0, "carbs": 0.0 },
+        { "name": "Какао на молоке", "proteins": 2.5, "fats": 2.0, "carbs": 7.0 },
+        { "name": "Смузи (банан+клубника+йогурт)", "proteins": 3.0, "fats": 1.0, "carbs": 15.0 },
+        { "name": "Компот из сухофруктов", "proteins": 0.5, "fats": 0.0, "carbs": 12.0 },
+        { "name": "Кефир 2.5%", "proteins": 3.0, "fats": 2.5, "carbs": 4.0 },
+        { "name": "Протеиновый коктейль (сывороточный)", "proteins": 10.0, "fats": 1.0, "carbs": 4.0 },
+        { "name": "Апельсиновый сок", "proteins": 0.7, "fats": 0.2, "carbs": 8.0 }
+      ]
+    },
+    {
+      "category": "Веганские и безглютеновые",
+      "items": [
+        { "name": "Тофу", "proteins": 8.0, "fats": 4.0, "carbs": 2.0 },
+        { "name": "Темпе", "proteins": 19.0, "fats": 11.0, "carbs": 9.0 },
+        { "name": "Чечевичные котлеты", "proteins": 10.0, "fats": 8.0, "carbs": 20.0 },
+        { "name": "Растительный бургер (из гороха)", "proteins": 14.0, "fats": 12.0, "carbs": 25.0 },
+        { "name": "Рисовые лепёшки", "proteins": 7.0, "fats": 2.0, "carbs": 78.0 },
+        { "name": "Безглютеновая паста (из риса)", "proteins": 7.0, "fats": 1.5, "carbs": 75.0 },
+        { "name": "Овсяное печенье (без глютена)", "proteins": 5.0, "fats": 10.0, "carbs": 60.0 },
+        { "name": "Кокосовое молоко", "proteins": 2.0, "fats": 20.0, "carbs": 5.0 },
+        { "name": "Нутовая мука", "proteins": 20.0, "fats": 6.0, "carbs": 60.0 },
+        { "name": "Соевый фарш (сухой)", "proteins": 50.0, "fats": 2.0, "carbs": 25.0 }
+      ]
+    }
+  ]
+}
