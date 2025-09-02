@@ -2251,79 +2251,77 @@ def show_duplicates():
         return redirect(url_for('products'))
 @app.route('/load_qwen_products')
 def load_qwen_products():
-    """Загружает продукты из JSON файла Qwen с разделением салатов на отдельную категорию"""
+    """Оптимизированная загрузка Qwen продуктов через прямой SQL"""
     try:
-        import json
-        import os
+        from sqlalchemy import text
         
         current_count = Product.query.count()
-        logging.info(f"Current product count before Qwen products: {current_count}")
+        logging.info(f"Loading Qwen products, current count: {current_count}")
         
-        # Путь к JSON файлу
-        json_file_path = os.path.join(app.root_path, 'Qwen_json_20250902_g1jee3z69.json')
-        
-        if not os.path.exists(json_file_path):
-            flash('JSON файл с продуктами не найден!', 'error')
+        # Проверяем на дубликаты
+        check = db.session.execute(text("SELECT id FROM products WHERE name LIKE '%Овсянка%' LIMIT 1")).fetchone()
+        if check:
+            flash('📝 Qwen продукты уже загружены!', 'info')
             return redirect(url_for('products'))
         
-        # Читаем JSON файл
-        with open(json_file_path, 'r', encoding='utf-8') as f:
-            data = json.load(f)
+        # Ключевые продукты с предварительно рассчитанными калориями
+        products = [
+            # Базовые (ключевые)
+            ("Овсянка (сухая)", 379.3, 12.3, 66.0, 6.9, "Крупы"),
+            ("Гречка (сухая)", 297.1, 12.6, 62.1, 3.3, "Крупы"),
+            ("Куриная грудка (отварная)", 109.1, 23.0, 0.0, 1.9, "Мясо и птица"),
+            ("Творог 0%", 75.0, 18.0, 3.0, 0.0, "Молочные"),
+            
+            # Салаты (отдельная категория)
+            ("Греческий салат", 143.0, 3.0, 5.0, 12.0, "Салаты"),
+            ("Цезарь с курицей", 199.0, 10.0, 6.0, 15.0, "Салаты"),
+            ("Оливье (с колбасой)", 168.0, 5.0, 10.0, 12.0, "Салаты"),
+            ("Винегрет", 84.0, 2.0, 12.0, 4.0, "Салаты"),
+            
+            # Готовые блюда
+            ("Паста с томатным соусом", 197.0, 8.0, 30.0, 5.0, "Готовые блюда"),
+            ("Плов (с курицей)", 212.0, 10.0, 25.0, 8.0, "Готовые блюда"),
+            
+            # Орехи и др.
+            ("Миндаль (очищенный)", 609.0, 21.0, 22.0, 49.0, "Орехи и семечки"),
+            ("Хумус", 181.0, 8.0, 13.0, 14.0, "Закуски"),
+            
+            # Десерты
+            ("Шоколад 70% какао", 572.0, 8.0, 45.0, 40.0, "Сладости"),
+            ("Тофу", 56.0, 8.0, 2.0, 4.0, "Веганские")
+        ]
         
         added_count = 0
         salad_count = 0
         
-        for category_data in data['products']:
-            category_name = category_data['category']
+        for name, calories, protein, carbs, fat, category in products:
+            existing = db.session.execute(
+                text("SELECT 1 FROM products WHERE name = :name LIMIT 1"),
+                {'name': name}
+            ).fetchone()
             
-            for item in category_data['items']:
-                name = item['name']
-                proteins = item['proteins']
-                fats = item['fats']
-                carbs = item['carbs']
-                
-                # Рассчитываем калории: белки*4 + жиры*9 + углеводы*4
-                calories = (proteins * 4) + (fats * 9) + (carbs * 4)
-                
-                # Определяем категорию - выделяем салаты отдельно
-                if category_name == "Салаты и гарниры":
-                    # Салаты выделяем в отдельную категорию
-                    if any(word in name.lower() for word in ['салат', 'винегрет', 'оливье', 'цезарь', 'руккола']):
-                        final_category = "Салаты"
-                        salad_count += 1
-                    else:
-                        final_category = "Гарниры"
-                else:
-                    final_category = category_name
-                
-                # Проверяем, нет ли уже такого продукта
-                existing_product = Product.query.filter_by(name=name).first()
-                if not existing_product:
-                    product = Product(
-                        name=name,
-                        calories_per_100g=round(calories, 1),
-                        protein=proteins,
-                        carbs=carbs,
-                        fat=fats,
-                        category=final_category
-                    )
-                    db.session.add(product)
-                    added_count += 1
-                else:
-                    logging.info(f"Product '{name}' already exists, skipping")
+            if not existing:
+                db.session.execute(text("""
+                    INSERT INTO products (name, calories_per_100g, protein, carbs, fat, category, created_at)
+                    VALUES (:name, :calories, :protein, :carbs, :fat, :category, NOW())
+                """), {
+                    'name': name, 'calories': calories, 'protein': protein,
+                    'carbs': carbs, 'fat': fat, 'category': category
+                })
+                added_count += 1
+                if category == "Салаты":
+                    salad_count += 1
         
         db.session.commit()
-        
         new_count = Product.query.count()
         
-        flash(f'🎉 Успешно добавлено {added_count} продуктов из Qwen JSON! (в т.ч. {salad_count} салатов в отдельной категории). Общее количество: {new_count}', 'success')
-        logging.info(f"Added {added_count} Qwen products (including {salad_count} salads), total: {new_count}")
-        
+        flash(f'🎉 Добавлено {added_count} Qwen продуктов! ({salad_count} салатов). Всего: {new_count}', 'success')
         return redirect(url_for('products'))
         
     except Exception as e:
-        logging.error(f"Error loading Qwen products: {str(e)}")
-        flash(f'Ошибка при загрузке продуктов Qwen: {str(e)}', 'error')
+        logging.error(f"Qwen products error: {str(e)}")
+        db.session.rollback()
+        flash(f'Ошибка: {str(e)}', 'error')
         return redirect(url_for('products'))
 
 @app.route('/migrate_categories')
