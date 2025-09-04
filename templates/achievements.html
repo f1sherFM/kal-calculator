@@ -1,0 +1,377 @@
+{% extends "base.html" %}
+
+{% block title %}Достижения - Калькулятор Калорий{% endblock %}
+
+{% block content %}
+<style>
+    .level-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        color: white;
+        padding: 30px;
+        margin-bottom: 30px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    }
+    
+    .level-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+    
+    .level-info h2 {
+        margin: 0;
+        font-size: 2.5rem;
+        font-weight: bold;
+    }
+    
+    .level-title {
+        font-size: 1.3rem;
+        opacity: 0.9;
+        margin-top: 5px;
+    }
+    
+    .level-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 15px;
+        text-align: center;
+    }
+    
+    .stat-item {
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 10px;
+        padding: 15px;
+        backdrop-filter: blur(10px);
+    }
+    
+    .stat-number {
+        font-size: 1.8rem;
+        font-weight: bold;
+        display: block;
+    }
+    
+    .stat-label {
+        font-size: 0.9rem;
+        opacity: 0.8;
+    }
+    
+    .progress-container {
+        margin-top: 25px;
+    }
+    
+    .progress-bar-custom {
+        height: 20px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%);
+        border-radius: 10px;
+        transition: width 0.8s ease;
+        position: relative;
+    }
+    
+    .progress-text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-weight: bold;
+        font-size: 0.9rem;
+        z-index: 2;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    }
+    
+    .achievements-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+        margin-top: 30px;
+    }
+    
+    .achievement-card {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: 3px solid transparent;
+    }
+    
+    .achievement-card.earned {
+        border-color: #ffd700;
+        background: linear-gradient(135deg, #fff9e6 0%, #fff3cd 100%);
+    }
+    
+    .achievement-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    }
+    
+    .achievement-icon {
+        font-size: 3rem;
+        margin-bottom: 15px;
+        display: block;
+    }
+    
+    .achievement-name {
+        font-size: 1.2rem;
+        font-weight: bold;
+        margin-bottom: 10px;
+        color: #333;
+    }
+    
+    .achievement-description {
+        color: #666;
+        font-size: 0.9rem;
+        line-height: 1.4;
+    }
+    
+    .achievement-date {
+        margin-top: 15px;
+        font-size: 0.8rem;
+        color: #999;
+        font-style: italic;
+    }
+    
+    .achievement-card.locked {
+        opacity: 0.5;
+        filter: grayscale(1);
+    }
+    
+    .achievement-card.locked .achievement-icon {
+        color: #ccc;
+    }
+    
+    .stats-section {
+        margin-top: 40px;
+    }
+    
+    .stats-card {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-top: 20px;
+    }
+    
+    .stat-card {
+        text-align: center;
+        padding: 20px;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: 10px;
+        border: 2px solid #dee2e6;
+    }
+    
+    .stat-card .icon {
+        font-size: 2.5rem;
+        color: #6c757d;
+        margin-bottom: 10px;
+    }
+    
+    .stat-card .value {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #495057;
+        display: block;
+    }
+    
+    .stat-card .label {
+        color: #6c757d;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    @media (max-width: 768px) {
+        .level-header {
+            text-align: center;
+        }
+        
+        .level-stats {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .achievements-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="container-fluid">
+    <!-- Карта уровня -->
+    <div class="level-card">
+        <div class="level-header">
+            <div class="level-info">
+                <h2>Уровень {{ user_level.level }}</h2>
+                <div class="level-title">{{ user_level.title }}</div>
+            </div>
+            
+            <div class="level-stats">
+                <div class="stat-item">
+                    <span class="stat-number">{{ user_level.experience }}</span>
+                    <span class="stat-label">Опыт</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">{{ user_level.total_food_entries }}</span>
+                    <span class="stat-label">Записей</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">{{ user_level.days_active }}</span>
+                    <span class="stat-label">Дней активности</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">{{ user_level.total_products_added }}</span>
+                    <span class="stat-label">Продуктов добавлено</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="progress-container">
+            <div class="progress-bar-custom">
+                <div class="progress-fill" data-progress="{{ user_level.progress_percentage }}"></div>
+                <div class="progress-text">
+                    {{ user_level.experience - (user_level.level - 1) * 100 }} / {{ user_level.experience_to_next_level - (user_level.level - 1) * 100 }} XP до уровня {{ user_level.level + 1 }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Достижения -->
+    <div class="row">
+        <div class="col-12">
+            <h3><i class="fas fa-trophy text-warning"></i> Достижения</h3>
+            
+            <div class="achievements-grid">
+                <!-- Достижения по уровням -->
+                {% set level_achievements = [
+                    (5, 'лвл_5', '🌱 Первые шаги', 'Достигнуть 5 уровня'),
+                    (10, 'лвл_10', '🥈 Опытный пользователь', 'Достигнуть 10 уровня'),
+                    (20, 'лвл_20', '🥇 Продвинутый трекер', 'Достигнуть 20 уровня'),
+                    (30, 'лвл_30', '⭐ Эксперт питания', 'Достигнуть 30 уровня'),
+                    (50, 'лвл_50', '🏆 Мастер Питания', 'Достигнуть 50 уровня')
+                ] %}
+                
+                {% for level_req, achievement_id, name, desc in level_achievements %}
+                {% set is_earned = user_level.level >= level_req %}
+                {% set achievement_data = achievements|selectattr('id', 'equalto', achievement_id)|first %}
+                <div class="achievement-card {{ 'earned' if is_earned else 'locked' }}">
+                    <div class="achievement-icon">{{ name.split()[0] }}</div>
+                    <div class="achievement-name">{{ name.split(' ', 1)[1] if ' ' in name else name }}</div>
+                    <div class="achievement-description">{{ desc }}</div>
+                    {% if achievement_data %}
+                    <div class="achievement-date">Получено: {{ achievement_data.earned_at[:10] }}</div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                
+                <!-- Достижения по активности -->
+                {% set activity_achievements = [
+                    (10, 'актив_10', '📅 10 дней активности', 'Быть активным 10 дней'),
+                    (30, 'актив_30', '📅 30 дней активности', 'Быть активным 30 дней'),
+                    (100, 'актив_100', '📅 100 дней активности', 'Быть активным 100 дней')
+                ] %}
+                
+                {% for days_req, achievement_id, name, desc in activity_achievements %}
+                {% set is_earned = user_level.days_active >= days_req %}
+                {% set achievement_data = achievements|selectattr('id', 'equalto', achievement_id)|first %}
+                <div class="achievement-card {{ 'earned' if is_earned else 'locked' }}">
+                    <div class="achievement-icon">{{ name.split()[0] }}</div>
+                    <div class="achievement-name">{{ name.split(' ', 1)[1] if ' ' in name else name }}</div>
+                    <div class="achievement-description">{{ desc }}</div>
+                    {% if achievement_data %}
+                    <div class="achievement-date">Получено: {{ achievement_data.earned_at[:10] }}</div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                
+                <!-- Достижения по записям еды -->
+                {% set food_achievements = [
+                    (50, 'еда_50', '🍽️ 50 записей о еде', 'Сделать 50 записей о еде'),
+                    (100, 'еда_100', '🍽️ 100 записей о еде', 'Сделать 100 записей о еде'),
+                    (500, 'еда_500', '🍽️ 500 записей о еде', 'Сделать 500 записей о еде')
+                ] %}
+                
+                {% for entries_req, achievement_id, name, desc in food_achievements %}
+                {% set is_earned = user_level.total_food_entries >= entries_req %}
+                {% set achievement_data = achievements|selectattr('id', 'equalto', achievement_id)|first %}
+                <div class="achievement-card {{ 'earned' if is_earned else 'locked' }}">
+                    <div class="achievement-icon">{{ name.split()[0] }}</div>
+                    <div class="achievement-name">{{ name.split(' ', 1)[1] if ' ' in name else name }}</div>
+                    <div class="achievement-description">{{ desc }}</div>
+                    {% if achievement_data %}
+                    <div class="achievement-date">Получено: {{ achievement_data.earned_at[:10] }}</div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Подробная статистика -->
+    <div class="stats-section">
+        <div class="stats-card">
+            <h4><i class="fas fa-chart-line text-primary"></i> Подробная статистика</h4>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="icon"><i class="fas fa-level-up-alt"></i></div>
+                    <span class="value">{{ user_level.level }}</span>
+                    <span class="label">Уровень</span>
+                </div>
+                <div class="stat-card">
+                    <div class="icon"><i class="fas fa-star"></i></div>
+                    <span class="value">{{ user_level.experience }}</span>
+                    <span class="label">Общий опыт</span>
+                </div>
+                <div class="stat-card">
+                    <div class="icon"><i class="fas fa-utensils"></i></div>
+                    <span class="value">{{ user_level.total_food_entries }}</span>
+                    <span class="label">Записей о еде</span>
+                </div>
+                <div class="stat-card">
+                    <div class="icon"><i class="fas fa-plus-circle"></i></div>
+                    <span class="value">{{ user_level.total_products_added }}</span>
+                    <span class="label">Продуктов добавлено</span>
+                </div>
+                <div class="stat-card">
+                    <div class="icon"><i class="fas fa-calendar-check"></i></div>
+                    <span class="value">{{ user_level.days_active }}</span>
+                    <span class="label">Активных дней</span>
+                </div>
+                <div class="stat-card">
+                    <div class="icon"><i class="fas fa-trophy"></i></div>
+                    <span class="value">{{ achievements|length }}</span>
+                    <span class="label">Достижений получено</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Анимация прогресс-бара при загрузке
+document.addEventListener('DOMContentLoaded', function() {
+    const progressFill = document.querySelector('.progress-fill');
+    if (progressFill) {
+        const targetWidth = progressFill.dataset.progress + '%';
+        progressFill.style.width = '0%';
+        setTimeout(() => {
+            progressFill.style.width = targetWidth;
+        }, 500);
+    }
+});
+</script>
+{% endblock %}

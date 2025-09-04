@@ -8,6 +8,7 @@ from typing import Optional
 import time
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
+from sqlalchemy import text, and_
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -60,6 +61,89 @@ def get_current_user():
         if user:
             return user
     return None
+
+# Функции для системы уровней
+def get_or_create_user_level(user_id: int) -> 'UserLevel':
+    """Получить или создать запись об уровне пользователя"""
+    user_level = UserLevel.query.filter_by(user_id=user_id).first()
+    if not user_level:
+        user_level = UserLevel(user_id=user_id)
+        db.session.add(user_level)
+        db.session.commit()
+        logging.info(f"Created new level record for user {user_id}")
+    return user_level
+
+def award_experience(user_id: int, points: int, activity_type: str, description: str = '') -> dict:
+    """Наградить пользователя опытом"""
+    try:
+        user_level = get_or_create_user_level(user_id)
+        old_level = user_level.level
+        
+        new_level = user_level.add_experience(points, activity_type)
+        db.session.commit()
+        
+        result = {
+            'success': True,
+            'experience_gained': points,
+            'total_experience': user_level.experience,
+            'old_level': old_level,
+            'new_level': new_level,
+            'level_up': new_level > old_level,
+            'progress_percentage': user_level.progress_percentage,
+            'title': user_level.title,
+            'activity': description or activity_type
+        }
+        
+        logging.info(f"User {user_id} gained {points} XP for {activity_type}. Level: {old_level} -> {new_level}")
+        return result
+        
+    except Exception as e:
+        logging.error(f"Error awarding experience to user {user_id}: {str(e)}")
+        return {'success': False, 'error': str(e)}
+
+def check_achievements(user_level: 'UserLevel'):
+    """Проверить и выдать достижения"""
+    new_achievements = []
+    
+    # Достижения по уровням
+    level_achievements = {
+        5: ('лвл_5', '🌱 Первые шаги'),
+        10: ('лвл_10', '🥈 Опытный пользователь'),
+        20: ('лвл_20', '🥇 Продвинутый трекер'),
+        30: ('лвл_30', '⭐ Эксперт питания'),
+        50: ('лвл_50', '🏆 Мастер Питания')
+    }
+    
+    for level_req, (ach_id, ach_name) in level_achievements.items():
+        if user_level.level >= level_req:
+            if user_level.add_achievement(ach_id, ach_name):
+                new_achievements.append(ach_name)
+    
+    # Достижения по активности
+    activity_achievements = {
+        10: ('актив_10', '📅 10 дней активности'),
+        30: ('актив_30', '📅 30 дней активности'),
+        100: ('актив_100', '📅 100 дней активности')
+    }
+    
+    for days_req, (ach_id, ach_name) in activity_achievements.items():
+        if user_level.days_active >= days_req:
+            if user_level.add_achievement(ach_id, ach_name):
+                new_achievements.append(ach_name)
+    
+    # Достижения по записям еды
+    food_achievements = {
+        50: ('еда_50', '🍽️ 50 записей о еде'),
+        100: ('еда_100', '🍽️ 100 записей о еде'),
+        500: ('еда_500', '🍽️ 500 записей о еде')
+    }
+    
+    for entries_req, (ach_id, ach_name) in food_achievements.items():
+        if user_level.total_food_entries >= entries_req:
+            if user_level.add_achievement(ach_id, ach_name):
+                new_achievements.append(ach_name)
+    
+    return new_achievements
 
 # Модели базы данных
 class User(db.Model):
@@ -178,6 +262,106 @@ class UserProfile(db.Model):
         self.goal = goal
         self.target_calories = target_calories
 
+class UserLevel(db.Model):
+    __tablename__ = 'user_levels'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, unique=True)
+    level = db.Column(db.Integer, default=1)
+    experience = db.Column(db.Integer, default=0)
+    total_food_entries = db.Column(db.Integer, default=0)
+    total_products_added = db.Column(db.Integer, default=0)
+    days_active = db.Column(db.Integer, default=0)
+    last_activity_date = db.Column(db.Date)
+    achievements = db.Column(db.Text)  # JSON строка с полученными достижениями
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Связь с пользователем
+    user = db.relationship('User', backref=db.backref('level_info', uselist=False))
+    
+    def __init__(self, user_id: int, **kwargs):
+        super().__init__(**kwargs)
+        self.user_id = user_id
+        self.achievements = '[]'  # Пустой JSON массив
+    
+    @property
+    def experience_to_next_level(self):
+        """Опыт, необходимый для следующего уровня"""
+        return self.level * 100
+    
+    @property
+    def progress_percentage(self):
+        """Процент прогресса до следующего уровня"""
+        current_level_exp = (self.level - 1) * 100
+        next_level_exp = self.level * 100
+        level_progress = self.experience - current_level_exp
+        level_requirement = next_level_exp - current_level_exp
+        return min(100, (level_progress / level_requirement) * 100) if level_requirement > 0 else 100
+    
+    @property
+    def title(self):
+        """Титул пользователя в зависимости от уровня"""
+        if self.level >= 50:
+            return "🏆 Мастер Питания"
+        elif self.level >= 30:
+            return "⭐ Эксперт"
+        elif self.level >= 20:
+            return "🥇 Продвинутый"
+        elif self.level >= 10:
+            return "🥈 Опытный"
+        elif self.level >= 5:
+            return "🥉 Новичок+"
+        else:
+            return "🌱 Новичок"
+    
+    def add_experience(self, points: int, activity_type: str):
+        """Добавить опыт и проверить повышение уровня"""
+        self.experience += points
+        
+        # Проверяем повышение уровня
+        while self.experience >= self.level * 100:
+            self.level += 1
+        
+        # Обновляем статистику активности
+        today = dt.date.today()
+        if activity_type == 'food_entry':
+            self.total_food_entries += 1
+        elif activity_type == 'product_added':
+            self.total_products_added += 1
+        
+        # Обновляем дни активности
+        if self.last_activity_date != today:
+            self.days_active += 1
+            self.last_activity_date = today
+        
+        self.updated_at = datetime.utcnow()
+        
+        return self.level  # Возвращаем текущий уровень
+    
+    def get_achievements(self):
+        """Получить список достижений"""
+        import json
+        try:
+            return json.loads(self.achievements or '[]')
+        except:
+            return []
+    
+    def add_achievement(self, achievement_id: str, achievement_name: str):
+        """Добавить достижение"""
+        import json
+        achievements = self.get_achievements()
+        
+        if achievement_id not in [a['id'] for a in achievements]:
+            achievements.append({
+                'id': achievement_id,
+                'name': achievement_name,
+                'earned_at': datetime.utcnow().isoformat()
+            })
+            self.achievements = json.dumps(achievements)
+            return True
+        return False
+
 # Добавляем мидлвар для обеспечения свежих данных
 @app.before_request
 def refresh_database_session():
@@ -217,6 +401,9 @@ def init_database():
             
             # Добавляем все продукты автоматически
             auto_load_all_products()
+            
+            # Инициализируем систему уровней для существующих пользователей
+            init_user_levels_for_existing_users()
             
     except Exception as e:
         logging.error(f"Error initializing database: {str(e)}")
@@ -318,6 +505,62 @@ def auto_load_all_products():
             
     except Exception as e:
         logging.error(f"Error in auto_load_all_products: {str(e)}")
+
+def init_user_levels_for_existing_users():
+    """Инициализируем систему уровней для существующих пользователей"""
+    try:
+        users_without_levels = db.session.execute(
+            text("""
+                SELECT u.id FROM users u 
+                LEFT JOIN user_levels ul ON u.id = ul.user_id 
+                WHERE ul.user_id IS NULL
+            """)
+        ).fetchall()
+        
+        for user_row in users_without_levels:
+            user_id = user_row[0]
+            
+            # Подсчитываем статистику пользователя
+            food_entries_count = db.session.execute(
+                text("SELECT COUNT(*) FROM food_entries WHERE user_id = :user_id"),
+                {'user_id': user_id}
+            ).scalar() or 0
+            
+            # Подсчитываем уникальные дни активности
+            active_days = db.session.execute(
+                text("SELECT COUNT(DISTINCT date) FROM food_entries WHERE user_id = :user_id"),
+                {'user_id': user_id}
+            ).scalar() or 0
+            
+            # Получаем последнюю дату активности
+            last_activity = db.session.execute(
+                text("SELECT MAX(date) FROM food_entries WHERE user_id = :user_id"),
+                {'user_id': user_id}
+            ).scalar()
+            
+            # Рассчитываем опыт на основе активности
+            experience = (food_entries_count * 10) + (active_days * 25)
+            level = max(1, experience // 100)
+            
+            # Создаем запись об уровне
+            user_level = UserLevel(
+                user_id=user_id,
+                level=level,
+                experience=experience,
+                total_food_entries=food_entries_count,
+                days_active=active_days,
+                last_activity_date=last_activity
+            )
+            
+            db.session.add(user_level)
+            logging.info(f"Initialized level {level} (XP: {experience}) for user {user_id}")
+        
+        db.session.commit()
+        logging.info(f"Initialized levels for {len(users_without_levels)} existing users")
+        
+    except Exception as e:
+        logging.error(f"Error initializing user levels: {str(e)}")
+        db.session.rollback()
 
 def load_extended_products():
     """Добавляет расширенный набор продуктов"""
@@ -733,6 +976,9 @@ def index():
         profile = UserProfile.query.filter_by(user_id=current_user.id).first()
         target_calories = profile.target_calories if profile and profile.target_calories else 2000
         
+        # Получаем информацию о уровне пользователя
+        user_level = get_or_create_user_level(current_user.id)
+        
         return render_template('index.html', 
                              meals=meals,
                              total_calories=total_calories,
@@ -741,7 +987,8 @@ def index():
                              total_fat=total_fat,
                              target_calories=target_calories,
                              today=today,
-                             current_user=current_user)
+                             current_user=current_user,
+                             user_level=user_level)
     except Exception as e:
         logging.error(f"Database error in index route: {str(e)}")
         flash('Ошибка подключения к базе данных. Проверьте настройки подключения.', 'error')
@@ -753,7 +1000,8 @@ def index():
                              total_fat=0,
                              target_calories=2000,
                              today=dt.date.today(),
-                             current_user=get_current_user())
+                             current_user=get_current_user(),
+                             user_level=None)
 
 @app.route('/products')
 @login_required
@@ -818,12 +1066,31 @@ def add_product():
             db.session.add(product)
             db.session.commit()
             
+            # Награждаем опытом за добавление нового продукта
+            current_user = get_current_user()
+            xp_result = None  # Инициализируем переменную
+            if current_user:
+                xp_result = award_experience(
+                    user_id=current_user.id,
+                    points=25,  # 25 XP за добавление нового продукта
+                    activity_type='product_added',
+                    description=f'Добавление нового продукта: {name}'
+                )
+            
             # Принудительно очищаем кэш для всех сессий
             db.session.expire_all()
             
             logging.info(f"Новый продукт добавлен: {name} ({category}) - {calories} ккал/100г")
             
-            flash(f'Продукт "{name}" успешно добавлен! Теперь он доступен всем пользователям!', 'success')
+            success_message = f'Продукт "{name}" успешно добавлен! Теперь он доступен всем пользователям!'
+            
+            # Добавляем информацию об опыте
+            if current_user and xp_result and xp_result.get('success'):
+                success_message += f' | +{xp_result["experience_gained"]} XP'
+                if xp_result.get('level_up'):
+                    success_message += f' | 🎉 Новый уровень: {xp_result["new_level"]}! {xp_result["title"]}'
+            
+            flash(success_message, 'success')
             
             # Перенаправляем на страницу продуктов с фильтром по категории
             return redirect(url_for('products', category=category, search=name))
@@ -870,9 +1137,27 @@ def add_food():
         
         if added_count > 0:
             db.session.commit()
+            
+            # Награждаем опытом за добавление еды
+            xp_result = award_experience(
+                user_id=current_user.id,
+                points=10 * added_count,  # 10 XP за каждый продукт
+                activity_type='food_entry',
+                description=f'Добавление {added_count} продуктов в дневник'
+            )
+            
             # Принудительно очищаем кэш для обновления данных
             db.session.expire_all()
-            flash(f'Добавлено {added_count} продуктов в дневник!', 'success')
+            
+            success_message = f'Добавлено {added_count} продуктов в дневник!'
+            
+            # Добавляем информацию об опыте
+            if xp_result.get('success'):
+                success_message += f' | +{xp_result["experience_gained"]} XP'
+                if xp_result.get('level_up'):
+                    success_message += f' | 🎉 Новый уровень: {xp_result["new_level"]}! {xp_result["title"]}'
+            
+            flash(success_message, 'success')
         else:
             flash('Не удалось добавить продукты. Проверьте данные.', 'danger')
         
@@ -998,8 +1283,8 @@ def statistics():
     # Статистика за последние 7 дней для текущего пользователя
     from datetime import timedelta
     
-    end_date = dt.date.today()
-    start_date = end_date - timedelta(days=6)
+    end_date: dt.date = dt.date.today()
+    start_date: dt.date = end_date - timedelta(days=6)
     
     daily_stats = []
     current_date = start_date
@@ -1017,9 +1302,11 @@ def statistics():
     
     # Средние значения за неделю
     week_entries = FoodEntry.query.filter(
-        FoodEntry.user_id == current_user.id,
-        FoodEntry.date >= start_date,
-        FoodEntry.date <= end_date
+        and_(
+            FoodEntry.user_id == current_user.id,
+            FoodEntry.date >= start_date,  # type: ignore
+            FoodEntry.date <= end_date  # type: ignore
+        )
     ).all()
     
     if week_entries:
@@ -1431,21 +1718,103 @@ def quick_add_food():
         db.session.add(food_entry)
         db.session.commit()
         
+        # Награждаем опытом за быстрое добавление еды
+        xp_result = award_experience(
+            user_id=current_user.id,
+            points=10,
+            activity_type='food_entry',
+            description=f'Быстрое добавление: {product_name} ({weight}г)'
+        )
+        
         # Принудительно очищаем кэш для всех сессий
         db.session.expire_all()
         
         logging.info(f"Быстро добавлен продукт: {product_name} ({weight}г) в {meal_type}")
         
+        success_message = f'Добавлено: {product_name} ({weight}г) в {meal_type}'
+        
+        # Добавляем информацию об опыте
+        if xp_result.get('success'):
+            success_message += f' | +{xp_result["experience_gained"]} XP'
+            if xp_result.get('level_up'):
+                success_message += f' | Новый уровень: {xp_result["new_level"]}!'
+        
         return jsonify({
             'success': True, 
-            'message': f'Добавлено: {product_name} ({weight}г) в {meal_type}',
+            'message': success_message,
             'product_id': product.id,
-            'entry_id': food_entry.id
+            'entry_id': food_entry.id,
+            'xp_info': xp_result if xp_result.get('success') else None
         })
         
     except Exception as e:
         logging.error(f"Ошибка при быстром добавлении продукта: {str(e)}")
         return jsonify({'success': False, 'message': 'Произошла ошибка при добавлении'})
+
+@app.route('/add_pizza_products')
+@login_required
+def add_pizza_products():
+    """Добавляет различные виды пиццы в базу данных"""
+    try:
+        # Проверяем, не добавлена ли уже пицца
+        existing_pizza = Product.query.filter(Product.name.ilike('%пицца%')).first()  # type: ignore
+        if existing_pizza:
+            flash('Пицца уже есть в базе данных!', 'info')
+            return redirect(url_for('products'))
+        
+        # Различные виды пиццы с реальными значениями калорий и БЖУ
+        pizza_products = [
+            # Классические пиццы
+            Product(name="Пицца Маргарита", calories_per_100g=263, protein=11.0, carbs=33.0, fat=10.0, category="Готовые блюда"),
+            Product(name="Пицца Пепперони", calories_per_100g=298, protein=12.2, carbs=35.7, fat=12.2, category="Готовые блюда"),
+            Product(name="Пицца Четыре сыра", calories_per_100g=312, protein=14.5, carbs=29.8, fat=15.2, category="Готовые блюда"),
+            Product(name="Пицца Гавайская", calories_per_100g=256, protein=10.8, carbs=35.2, fat=8.6, category="Готовые блюда"),
+            Product(name="Пицца Мясная", calories_per_100g=315, protein=15.3, carbs=28.4, fat=16.8, category="Готовые блюда"),
+            
+            # Овощные пиццы
+            Product(name="Пицца Овощная", calories_per_100g=201, protein=8.2, carbs=32.1, fat=5.8, category="Готовые блюда"),
+            Product(name="Пицца с грибами", calories_per_100g=223, protein=9.5, carbs=32.8, fat=7.2, category="Готовые блюда"),
+            Product(name="Пицца Капричоза", calories_per_100g=267, protein=12.8, carbs=31.5, fat=10.9, category="Готовые блюда"),
+            
+            # Пиццы с морепродуктами
+            Product(name="Пицца с тунцом", calories_per_100g=245, protein=13.7, carbs=29.4, fat=8.9, category="Готовые блюда"),
+            Product(name="Пицца с креветками", calories_per_100g=238, protein=12.9, carbs=30.2, fat=8.1, category="Готовые блюда"),
+            Product(name="Пицца с лососем", calories_per_100g=276, protein=14.2, carbs=28.7, fat=12.4, category="Готовые блюда"),
+            
+            # Белые пиццы (без томатного соуса)
+            Product(name="Пицца Бьянка", calories_per_100g=289, protein=13.1, carbs=28.9, fat=13.8, category="Готовые блюда"),
+            Product(name="Пицца с курицей", calories_per_100g=268, protein=14.6, carbs=29.3, fat=10.7, category="Готовые блюда"),
+            Product(name="Пицца Барбекю", calories_per_100g=284, protein=13.4, carbs=32.8, fat=11.5, category="Готовые блюда"),
+            
+            # Тонкое тесто
+            Product(name="Пицца тонкое тесто Маргарита", calories_per_100g=235, protein=10.2, carbs=28.5, fat=9.1, category="Готовые блюда"),
+            Product(name="Пицца тонкое тесто Пепперони", calories_per_100g=268, protein=11.8, carbs=30.2, fat=11.4, category="Готовые блюда"),
+            
+            # Детские пиццы
+            Product(name="Детская пицца с сыром", calories_per_100g=248, protein=10.5, carbs=32.1, fat=8.9, category="Готовые блюда"),
+            Product(name="Детская пицца с ветчиной", calories_per_100g=261, protein=11.8, carbs=31.6, fat=9.7, category="Готовые блюда")
+        ]
+        
+        # Добавляем продукты
+        added_count = 0
+        for product in pizza_products:
+            # Проверяем, не существует ли уже такой продукт
+            existing = Product.query.filter_by(name=product.name).first()
+            if not existing:
+                db.session.add(product)
+                added_count += 1
+        
+        db.session.commit()
+        
+        flash(f'Успешно добавлено {added_count} видов пиццы в базу данных!', 'success')
+        logging.info(f"Added {added_count} pizza products")
+        
+        return redirect(url_for('products'))
+        
+    except Exception as e:
+        logging.error(f"Error adding pizza products: {str(e)}")
+        flash(f'Ошибка при добавлении пиццы: {str(e)}', 'error')
+        return redirect(url_for('products'))
 
 @app.route('/load_all_products')
 def load_all_products():
@@ -2422,6 +2791,65 @@ def check_database_connection():
     except Exception as e:
         logging.error(f"Database connection failed: {str(e)}")
         return False
+
+@app.route('/toggle_theme')
+@login_required
+def toggle_theme():
+    """API endpoint для переключения темы"""
+    theme = request.args.get('theme', 'light')
+    
+    # Возвращаем JSON ответ для AJAX запроса
+    return jsonify({
+        'status': 'success',
+        'theme': theme,
+        'message': f'Тема изменена на {"темную" if theme == "dark" else "светлую"}'
+    })
+
+@app.route('/achievements')
+@login_required
+def achievements():
+    """Страница достижений и статистики уровня"""
+    current_user = get_current_user()
+    if not current_user:
+        flash('Ошибка аутентификации. Пожалуйста, войдите в систему снова.', 'error')
+        return redirect(url_for('login'))
+    
+    user_level = get_or_create_user_level(current_user.id)
+    achievements_list = user_level.get_achievements()
+    
+    # Проверяем новые достижения
+    new_achievements = check_achievements(user_level)
+    if new_achievements:
+        db.session.commit()
+        for achievement in new_achievements:
+            flash(f'🏆 Новое достижение: {achievement}!', 'success')
+    
+    return render_template('achievements.html', 
+                         user_level=user_level, 
+                         achievements=achievements_list,
+                         current_user=current_user)
+
+@app.route('/api/user_level')
+@login_required
+def api_user_level():
+    """АPI для получения информации о уровне пользователя"""
+    current_user = get_current_user()
+    if not current_user:
+        return jsonify({'success': False, 'message': 'Ошибка аутентификации'})
+    
+    user_level = get_or_create_user_level(current_user.id)
+    
+    return jsonify({
+        'success': True,
+        'level': user_level.level,
+        'experience': user_level.experience,
+        'experience_to_next': user_level.experience_to_next_level,
+        'progress_percentage': user_level.progress_percentage,
+        'title': user_level.title,
+        'total_food_entries': user_level.total_food_entries,
+        'total_products_added': user_level.total_products_added,
+        'days_active': user_level.days_active
+    })
 
 if __name__ == '__main__':
     # Check database connection before starting the app

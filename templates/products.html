@@ -129,6 +129,12 @@
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end">
                             <li>
+                                <a class="dropdown-item" href="{{ url_for('add_pizza_products') }}">
+                                    <i class="fas fa-pizza-slice text-success"></i> Добавить пиццы
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
                                 <a class="dropdown-item" href="{{ url_for('show_duplicates') }}">
                                     <i class="fas fa-search text-warning"></i> Показать дубликаты
                                     <span id="duplicate-badge" class="badge bg-danger ms-1" style="display: none;">0</span>
