@@ -34,7 +34,7 @@
 <!-- Виджет уровня пользователя -->
 {% if user_level %}
 <div class="level-widget mb-5">
-    <div class="level-card animate-fade-in">
+    <div class="level-card">
         <div class="level-info">
             <div class="level-badge">
                 <span class="level-number">{{ user_level.level }}</span>
@@ -42,11 +42,13 @@
             </div>
             <div class="level-details">
                 <h4 class="level-title">{{ user_level.title }}</h4>
-                <div class="level-progress">
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: {{ user_level.progress_percentage }}%"></div>
-                        <span class="progress-text">{{ user_level.experience - (user_level.level - 1) * 100 }} / {{ user_level.experience_to_next_level - (user_level.level - 1) * 100 }} XP</span>
+                <div class="level-progress-wide">
+                    <div class="progress-bar-wide">
+                        <div class="progress-fill-wide" data-progress="{{ user_level.progress_percentage|default(0) }}">
+                            <div class="progress-shimmer"></div>
+                        </div>
                     </div>
+                    <span class="progress-text-wide">{{ user_level.experience - (user_level.level - 1) * 100 }} / {{ user_level.experience_to_next_level - (user_level.level - 1) * 100 }} XP</span>
                 </div>
             </div>
             <div class="level-stats">
@@ -412,7 +414,7 @@
 
 {% block scripts %}
 <style>
-/* Дополнительные стили для главной страницы */
+/* Дополнительные стили для главной страницы + Темная тема */
 
 /* Hero Section */
 .hero-section {
@@ -423,6 +425,11 @@
     overflow: hidden;
     color: white;
     margin-bottom: 40px;
+}
+
+/* Dark theme for hero section */
+body[data-theme="dark"] .hero-section {
+    background: linear-gradient(135deg, #4c6ef5 0%, #5f3dc4 100%) !important;
 }
 
 .hero-content {
@@ -505,6 +512,29 @@
     box-shadow: 0 10px 30px rgba(40, 167, 69, 0.2);
     position: relative;
     overflow: hidden;
+    transform: translateY(30px);
+    opacity: 0;
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.level-card.animate-fade-in {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.level-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(40, 167, 69, 0.3);
+}
+
+/* Dark theme for level card */
+body[data-theme="dark"] .level-card {
+    background: linear-gradient(135deg, #2c5530 0%, #1e4a2b 100%) !important;
+    box-shadow: 0 10px 30px rgba(44, 85, 48, 0.3) !important;
+}
+
+body[data-theme="dark"] .level-card:hover {
+    box-shadow: 0 20px 40px rgba(44, 85, 48, 0.4) !important;
 }
 
 .level-card::before {
@@ -524,6 +554,18 @@
     gap: 20px;
     position: relative;
     z-index: 2;
+    flex-wrap: wrap;
+}
+
+@media (min-width: 768px) {
+    .level-info {
+        flex-wrap: nowrap;
+    }
+    
+    .level-details {
+        flex: 2;
+        min-width: 300px;
+    }
 }
 
 .level-badge {
@@ -566,8 +608,8 @@
 
 .progress-bar {
     background: rgba(255, 255, 255, 0.2);
-    height: 8px;
-    border-radius: 4px;
+    height: 12px;
+    border-radius: 6px;
     overflow: hidden;
     position: relative;
 }
@@ -575,8 +617,79 @@
 .progress-fill {
     background: linear-gradient(90deg, #ffd700, #ffed4e);
     height: 100%;
-    border-radius: 4px;
+    border-radius: 6px;
     transition: width 0.8s ease;
+    width: 0%;
+}
+
+/* Wide Progress Bar Styles */
+.level-progress-wide {
+    margin-top: 15px;
+    flex: 1;
+    margin-left: 20px;
+    margin-right: 20px;
+}
+
+.progress-bar-wide {
+    background: rgba(255, 255, 255, 0.2);
+    height: 12px;
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+    backdrop-filter: blur(5px);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.progress-fill-wide {
+    background: linear-gradient(90deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%);
+    height: 100%;
+    border-radius: 6px;
+    transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 0%;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(255, 215, 0, 0.4);
+}
+
+.progress-shimmer {
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(255, 255, 255, 0.4) 50%, 
+        transparent 100%);
+    animation: shimmer 2s infinite;
+}
+
+.progress-text-wide {
+    font-size: 0.9rem;
+    margin-top: 8px;
+    opacity: 0.95;
+    text-align: center;
+    display: block;
+    font-weight: 500;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes shimmer {
+    0% {
+        left: -100%;
+    }
+    100% {
+        left: 100%;
+    }
+}
+
+@keyframes progressPulse {
+    0%, 100% {
+        box-shadow: 0 2px 8px rgba(255, 215, 0, 0.4);
+    }
+    50% {
+        box-shadow: 0 2px 16px rgba(255, 215, 0, 0.8), 0 0 20px rgba(255, 215, 0, 0.3);
+    }
 }
 
 .progress-text {
@@ -645,13 +758,29 @@
         text-align: center;
     }
     
+    .level-progress-wide {
+        margin: 15px 0;
+        width: 100%;
+        order: 2;
+    }
+    
     .level-stats {
         justify-content: center;
         flex-wrap: wrap;
+        order: 3;
     }
     
     .level-badge {
-        order: -1;
+        order: 1;
+    }
+    
+    .level-link {
+        order: 4;
+    }
+    
+    .level-details {
+        order: 2;
+        width: 100%;
     }
 }
 
@@ -671,6 +800,15 @@
     font-size: 1.1rem;
     color: #7f8c8d;
     margin: 0;
+}
+
+/* Dark theme for section headers */
+body[data-theme="dark"] .section-title {
+    color: var(--text-primary) !important;
+}
+
+body[data-theme="dark"] .section-subtitle {
+    color: var(--text-secondary) !important;
 }
 
 /* Карточки статистики */
@@ -757,6 +895,19 @@
     margin-top: 5px;
 }
 
+/* Dark theme for stats */
+body[data-theme="dark"] .stats-number {
+    color: var(--text-primary) !important;
+}
+
+body[data-theme="dark"] .stats-label {
+    color: var(--text-secondary) !important;
+}
+
+body[data-theme="dark"] .stats-detail {
+    color: var(--text-muted) !important;
+}
+
 .progress-bar-modern {
     height: 6px;
     background: linear-gradient(90deg, var(--card-color-1), var(--card-color-2));
@@ -796,6 +947,19 @@
     box-shadow: 0 10px 25px rgba(33, 150, 243, 0.15);
 }
 
+/* Dark theme for quick products */
+body[data-theme="dark"] .quick-product-btn {
+    background: var(--bg-secondary) !important;
+    border-color: var(--border-primary) !important;
+    color: var(--text-primary) !important;
+    box-shadow: 0 5px 15px var(--shadow-light) !important;
+}
+
+body[data-theme="dark"] .quick-product-btn:hover {
+    border-color: #4dabf7 !important;
+    box-shadow: 0 10px 25px rgba(77, 171, 247, 0.2) !important;
+}
+
 .product-emoji {
     font-size: 2.5rem;
     margin-bottom: 10px;
@@ -812,6 +976,15 @@
 .product-portion {
     color: #7f8c8d;
     font-size: 0.8rem;
+}
+
+/* Dark theme for product info */
+body[data-theme="dark"] .product-name {
+    color: var(--text-primary) !important;
+}
+
+body[data-theme="dark"] .product-portion {
+    color: var(--text-muted) !important;
 }
 
 /* Карточки приемов пищи */
@@ -1271,12 +1444,20 @@ function animateOnLoad() {
     // Apply animation delays from data attributes
     applyAnimationDelays();
     
+    // Animate level card first
+    const levelCard = document.querySelector('.level-card');
+    if (levelCard) {
+        setTimeout(() => {
+            levelCard.classList.add('animate-fade-in');
+        }, 200);
+    }
+    
     // Добавляем анимации с задержкой для карточек статистики
     const statsCards = document.querySelectorAll('.stats-card');
     statsCards.forEach((card, index) => {
         setTimeout(() => {
             card.classList.add('animate-loaded');
-        }, index * 150);
+        }, (index * 150) + 600);
     });
     
     // Анимация для карточек приемов пищи
@@ -1284,7 +1465,7 @@ function animateOnLoad() {
     mealCards.forEach((card, index) => {
         setTimeout(() => {
             card.classList.add('animate-loaded');
-        }, (index + statsCards.length) * 150 + 600);
+        }, (index + statsCards.length) * 150 + 1000);
     });
 }
 
@@ -1310,6 +1491,29 @@ function animateProgressBars() {
             }, index * 200);
         });
     }, 500);
+    
+    // Animate level progress bar (old)
+    const levelProgressBar = document.querySelector('.progress-fill[data-progress]');
+    if (levelProgressBar) {
+        setTimeout(() => {
+            const progress = levelProgressBar.getAttribute('data-progress');
+            levelProgressBar.style.width = progress + '%';
+        }, 800);
+    }
+    
+    // Animate wide level progress bar (new)
+    const wideProgressBar = document.querySelector('.progress-fill-wide[data-progress]');
+    if (wideProgressBar) {
+        setTimeout(() => {
+            const progress = wideProgressBar.getAttribute('data-progress');
+            wideProgressBar.style.width = progress + '%';
+            
+            // Add pulsing effect for high progress
+            if (progress > 80) {
+                wideProgressBar.style.animation = 'progressPulse 2s ease-in-out infinite';
+            }
+        }, 1000);
+    }
 }
 
 function animateProgressRings() {
@@ -1406,110 +1610,6 @@ function showMealTypeModal(productName, weight) {
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Выберите прием пищи:</label>
                             <div class="meal-options">
-                                <div class="row g-2">
-                                    <div class="col-6">
-                                        <input type="radio" class="btn-check" name="meal-type" id="meal-breakfast" value="завтрак" checked>
-                                        <label class="btn btn-outline-warning w-100 meal-option-btn" for="meal-breakfast">
-                                            <span class="meal-emoji">🌅</span>
-                                            <br><small>Завтрак</small>
-                                        </label>
-                                    </div>
-                                    <div class="col-6">
-                                        <input type="radio" class="btn-check" name="meal-type" id="meal-lunch" value="обед">
-                                        <label class="btn btn-outline-info w-100 meal-option-btn" for="meal-lunch">
-                                            <span class="meal-emoji">☀️</span>
-                                            <br><small>Обед</small>
-                                        </label>
-                                    </div>
-                                    <div class="col-6">
-                                        <input type="radio" class="btn-check" name="meal-type" id="meal-dinner" value="ужин">
-                                        <label class="btn btn-outline-primary w-100 meal-option-btn" for="meal-dinner">
-                                            <span class="meal-emoji">🌙</span>
-                                            <br><small>Ужин</small>
-                                        </label>
-                                    </div>
-                                    <div class="col-6">
-                                        <input type="radio" class="btn-check" name="meal-type" id="meal-snack" value="перекус">
-                                        <label class="btn btn-outline-success w-100 meal-option-btn" for="meal-snack">
-                                            <span class="meal-emoji">🍪</span>
-                                            <br><small>Перекус</small>
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">
-                            <i class="fas fa-times me-1"></i>Отмена
-                        </button>
-                        <button type="button" class="btn btn-primary" onclick="quickAddProduct('${productName}', ${weight})">
-                            <i class="fas fa-check me-1"></i>Добавить
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    // Удаляем старое модальное окно если есть
-    const existingModal = document.getElementById('quickAddModal');
-    if (existingModal) {
-        existingModal.remove();
-    }
-    
-    // Добавляем новое модальное окно
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
-    
-    // Показываем модальное окно с анимацией
-    const modal = new bootstrap.Modal(document.getElementById('quickAddModal'));
-    modal.show();
-    
-    // Добавляем стили для модального окна
-    const style = document.createElement('style');
-    style.textContent = `
-        .product-preview {
-            padding: 20px;
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            border-radius: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .product-preview .product-emoji {
-            font-size: 3rem;
-            display: block;
-            margin-bottom: 10px;
-        }
-        
-        .meal-option-btn {
-            padding: 15px 10px;
-            height: 80px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-            border-width: 2px;
-        }
-        
-        .meal-option-btn .meal-emoji {
-            font-size: 1.5rem;
-            margin-bottom: 5px;
-        }
-        
-        .meal-option-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-        
-        .btn-check:checked + .meal-option-btn {
-            transform: scale(1.05);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-        }
-    `;
-    
-    document.head.appendChild(style);
-}
                                 <div class="row g-2">
                                     <div class="col-6">
                                         <input type="radio" class="btn-check" name="meal-type" id="meal-breakfast" value="завтрак" checked>
