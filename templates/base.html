@@ -164,6 +164,27 @@
             animation-timing-function: linear;
         }
         
+        /* Dark theme shapes with better visibility */
+        body[data-theme="dark"] .shape {
+            opacity: 0.08;
+        }
+        
+        body[data-theme="dark"] .shape-1 {
+            background: linear-gradient(45deg, rgba(255, 255, 255, 0.12), rgba(173, 181, 189, 0.1));
+        }
+        
+        body[data-theme="dark"] .shape-2 {
+            background: linear-gradient(45deg, rgba(255, 255, 255, 0.1), rgba(206, 212, 218, 0.08));
+        }
+        
+        body[data-theme="dark"] .shape-3 {
+            background: linear-gradient(45deg, rgba(255, 255, 255, 0.08), rgba(173, 181, 189, 0.1));
+        }
+        
+        body[data-theme="dark"] .shape-4 {
+            background: linear-gradient(45deg, rgba(255, 255, 255, 0.1), rgba(222, 226, 230, 0.08));
+        }
+        
         .shape-1 {
             top: 10%;
             left: 10%;
@@ -479,8 +500,40 @@
             font-weight: 500;
         }
         
-        .modern-toast .btn-close {
-            filter: invert(1);
+        /* Enhanced Modern Toast Notifications for Dark Theme */
+        body[data-theme="dark"] .modern-toast {
+            backdrop-filter: blur(20px) !important;
+            border: 1px solid var(--border-primary) !important;
+        }
+        
+        body[data-theme="dark"] .toast-success {
+            background: linear-gradient(135deg, rgba(81, 207, 102, 0.9), rgba(64, 192, 87, 0.95)) !important;
+            box-shadow: 
+                0 15px 35px rgba(81, 207, 102, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+        }
+        
+        body[data-theme="dark"] .toast-error {
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.9), rgba(220, 53, 69, 0.95)) !important;
+            box-shadow: 
+                0 15px 35px rgba(255, 107, 107, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+        }
+        
+        body[data-theme="dark"] .toast-info {
+            background: linear-gradient(135deg, rgba(116, 192, 252, 0.9), rgba(77, 171, 247, 0.95)) !important;
+            box-shadow: 
+                0 15px 35px rgba(116, 192, 252, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+        }
+        
+        body[data-theme="dark"] .modern-toast .toast-header {
+            background: rgba(0, 0, 0, 0.1) !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+        
+        body[data-theme="dark"] .modern-toast .btn-close {
+            filter: invert(1) brightness(1.2) !important;
         }
         
         .toast-icon {
@@ -515,46 +568,100 @@
         }
         
         [data-theme="dark"] {
-            /* Dark theme colors */
-            --bg-primary: #1a1a1a;
-            --bg-secondary: #2d2d2d;
-            --bg-tertiary: #404040;
-            --text-primary: #e0e0e0;
-            --text-secondary: #b0b0b0;
-            --text-muted: #808080;
+            /* Enhanced dark theme colors with better contrast */
+            --bg-primary: #121212;
+            --bg-secondary: #1e1e1e;
+            --bg-tertiary: #2d2d2d;
+            --bg-quaternary: #383838;
+            --text-primary: #f5f5f5;
+            --text-secondary: #c4c4c4;
+            --text-muted: #9e9e9e;
             --border-primary: #404040;
-            --border-secondary: #353535;
-            --shadow-light: rgba(0,0,0,0.3);
-            --shadow-medium: rgba(0,0,0,0.4);
-            --shadow-dark: rgba(0,0,0,0.5);
+            --border-secondary: #4a4a4a;
+            --shadow-light: rgba(0,0,0,0.4);
+            --shadow-medium: rgba(0,0,0,0.6);
+            --shadow-dark: rgba(0,0,0,0.8);
+            --accent-primary: #4dabf7;
+            --accent-secondary: #339af0;
+            --success-color: #51cf66;
+            --warning-color: #ffd43b;
+            --error-color: #ff6b6b;
+            --info-color: #74c0fc;
         }
         
         /* Base dark theme styles */
         body[data-theme="dark"] {
-            background-color: var(--bg-primary) !important;
+            background: linear-gradient(-45deg, #1a1a2e, #16213e, #0f3460, #1a1a2e, #2d2d44, #16213e) !important;
+            background-size: 400% 400% !important;
+            background-attachment: fixed !important;
+            animation: darkGradientShift 25s ease infinite !important;
             color: var(--text-primary) !important;
         }
         
-        body[data-theme="dark"] .bg-light {
-            background-color: var(--bg-primary) !important;
+        /* Dark theme gradient animation */
+        @keyframes darkGradientShift {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
         }
         
-        /* Cards and containers */
+        /* Dark theme background effects */
+        body[data-theme="dark"]::before {
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(108, 117, 125, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(173, 181, 189, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.08) 0%, transparent 50%);
+        }
+        
+        body[data-theme="dark"]::after {
+            background-image: 
+                linear-gradient(45deg, rgba(255, 255, 255, 0.02) 25%, transparent 25%),
+                linear-gradient(-45deg, rgba(255, 255, 255, 0.02) 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, rgba(255, 255, 255, 0.02) 75%),
+                linear-gradient(-45deg, transparent 75%, rgba(255, 255, 255, 0.02) 75%);
+        }
+        
+        /* Enhanced Cards and containers with improved theming */
         body[data-theme="dark"] .card,
         body[data-theme="dark"] .modern-form-card,
         body[data-theme="dark"] .stats-card,
         body[data-theme="dark"] .level-card,
         body[data-theme="dark"] .achievement-card,
         body[data-theme="dark"] .meal-card-modern {
-            background-color: var(--bg-secondary) !important;
-            border-color: var(--border-primary) !important;
+            background: linear-gradient(145deg, var(--bg-secondary), var(--bg-tertiary)) !important;
+            border: 1px solid var(--border-primary) !important;
             color: var(--text-primary) !important;
-            box-shadow: 0 5px 15px var(--shadow-light) !important;
+            box-shadow: 
+                0 8px 32px var(--shadow-light),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+            backdrop-filter: blur(10px) !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+        
+        body[data-theme="dark"] .card:hover {
+            transform: translateY(-8px) !important;
+            box-shadow: 
+                0 20px 40px var(--shadow-medium),
+                0 0 20px rgba(77, 171, 247, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+            border-color: var(--accent-primary) !important;
         }
         
         body[data-theme="dark"] .meal-card {
-            background-color: var(--bg-secondary) !important;
-            border-left-color: #4dabf7 !important;
+            background: linear-gradient(145deg, var(--bg-secondary), var(--bg-tertiary)) !important;
+            border-left: 4px solid var(--accent-primary) !important;
+            box-shadow: 0 4px 20px var(--shadow-light) !important;
+        }
+        
+        body[data-theme="dark"] .meal-card:hover {
+            background: linear-gradient(145deg, var(--bg-tertiary), var(--bg-quaternary)) !important;
+            border-left-color: var(--accent-secondary) !important;
         }
         
         /* Enhanced gradient cards for dark theme */
@@ -566,54 +673,80 @@
             background: linear-gradient(135deg, #4c6ef5 0%, #5f3dc4 100%) !important;
         }
         
-        /* Forms */
+        /* Enhanced Forms with glassmorphism effect */
         body[data-theme="dark"] .form-control,
         body[data-theme="dark"] .form-select,
         body[data-theme="dark"] .modern-input {
-            background-color: var(--bg-tertiary) !important;
-            border-color: var(--border-primary) !important;
+            background: linear-gradient(145deg, var(--bg-tertiary), var(--bg-quaternary)) !important;
+            border: 1px solid var(--border-primary) !important;
             color: var(--text-primary) !important;
+            box-shadow: 
+                inset 0 2px 4px var(--shadow-light),
+                0 0 0 1px rgba(255, 255, 255, 0.05) !important;
+            backdrop-filter: blur(10px) !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
         }
         
         body[data-theme="dark"] .form-control:focus,
         body[data-theme="dark"] .form-select:focus,
         body[data-theme="dark"] .modern-input:focus {
-            background-color: var(--bg-tertiary) !important;
-            border-color: #4dabf7 !important;
-            box-shadow: 0 0 0 0.2rem rgba(77, 171, 247, 0.25) !important;
+            background: linear-gradient(145deg, var(--bg-quaternary), var(--bg-tertiary)) !important;
+            border-color: var(--accent-primary) !important;
+            box-shadow: 
+                0 0 0 0.25rem rgba(77, 171, 247, 0.25),
+                inset 0 2px 4px var(--shadow-light),
+                0 4px 20px rgba(77, 171, 247, 0.15) !important;
             color: var(--text-primary) !important;
+            transform: translateY(-1px) !important;
         }
         
         body[data-theme="dark"] .form-control::placeholder,
         body[data-theme="dark"] .modern-input::placeholder {
             color: var(--text-muted) !important;
+            font-style: normal !important;
         }
         
-        /* Buttons - Enhanced */
+        /* Enhanced Buttons with improved gradients and effects */
         body[data-theme="dark"] .btn-primary,
         body[data-theme="dark"] .btn-login,
         body[data-theme="dark"] .btn-register {
-            background: linear-gradient(135deg, #4dabf7 0%, #339af0 100%) !important;
-            border-color: #4dabf7 !important;
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%) !important;
+            border: 1px solid var(--accent-primary) !important;
             color: white !important;
+            box-shadow: 
+                0 4px 15px rgba(77, 171, 247, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
         }
         
         body[data-theme="dark"] .btn-primary:hover,
         body[data-theme="dark"] .btn-login:hover,
         body[data-theme="dark"] .btn-register:hover {
-            background: linear-gradient(135deg, #339af0 0%, #228be6 100%) !important;
-            box-shadow: 0 8px 25px rgba(77, 171, 247, 0.4) !important;
+            background: linear-gradient(135deg, var(--accent-secondary) 0%, #228be6 100%) !important;
+            box-shadow: 
+                0 8px 30px rgba(77, 171, 247, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+            transform: translateY(-2px) scale(1.02) !important;
+            border-color: var(--accent-secondary) !important;
         }
         
         body[data-theme="dark"] .btn-secondary {
-            background-color: var(--bg-tertiary) !important;
-            border-color: var(--border-primary) !important;
+            background: linear-gradient(145deg, var(--bg-tertiary), var(--bg-quaternary)) !important;
+            border: 1px solid var(--border-primary) !important;
             color: var(--text-primary) !important;
+            box-shadow: 
+                0 2px 10px var(--shadow-light),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
         }
         
         body[data-theme="dark"] .btn-secondary:hover {
-            background-color: #505050 !important;
-            border-color: #606060 !important;
+            background: linear-gradient(145deg, var(--bg-quaternary), var(--bg-tertiary)) !important;
+            border-color: var(--border-secondary) !important;
+            transform: translateY(-1px) !important;
+            box-shadow: 
+                0 4px 15px var(--shadow-medium),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
         }
         
         body[data-theme="dark"] .btn-outline-primary {
@@ -636,39 +769,69 @@
             color: var(--text-primary) !important;
         }
         
-        /* Tables */
+        /* Enhanced Tables with glassmorphism */
         body[data-theme="dark"] .table {
-            background-color: var(--bg-secondary) !important;
+            background: linear-gradient(145deg, var(--bg-secondary), var(--bg-tertiary)) !important;
             color: var(--text-primary) !important;
+            backdrop-filter: blur(10px) !important;
+            border-radius: 12px !important;
+            overflow: hidden !important;
+            box-shadow: 0 8px 32px var(--shadow-light) !important;
         }
         
-        body[data-theme="dark"] .table th,
+        body[data-theme="dark"] .table th {
+            background: linear-gradient(145deg, var(--bg-tertiary), var(--bg-quaternary)) !important;
+            border-color: var(--border-primary) !important;
+            color: var(--text-primary) !important;
+            font-weight: 600 !important;
+            text-shadow: 0 1px 2px var(--shadow-light) !important;
+        }
+        
         body[data-theme="dark"] .table td {
             border-color: var(--border-primary) !important;
+            transition: all 0.3s ease !important;
+        }
+        
+        body[data-theme="dark"] .table tbody tr:hover {
+            background: linear-gradient(145deg, var(--bg-tertiary), var(--bg-quaternary)) !important;
+            transform: translateY(-1px) !important;
+            box-shadow: 0 4px 15px var(--shadow-light) !important;
         }
         
         body[data-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > td {
-            background-color: var(--bg-tertiary) !important;
+            background: rgba(255, 255, 255, 0.02) !important;
         }
         
-        /* Dropdowns */
+        /* Enhanced Dropdowns with glassmorphism */
         body[data-theme="dark"] .dropdown-menu {
-            background-color: var(--bg-secondary) !important;
-            border-color: var(--border-primary) !important;
-            box-shadow: 0 10px 30px var(--shadow-medium) !important;
+            background: linear-gradient(145deg, rgba(18, 18, 18, 0.95), rgba(30, 30, 30, 0.95)) !important;
+            border: 1px solid var(--border-primary) !important;
+            backdrop-filter: blur(20px) !important;
+            box-shadow: 
+                0 15px 35px var(--shadow-medium),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+            border-radius: 12px !important;
+            padding: 8px !important;
         }
         
         body[data-theme="dark"] .dropdown-item {
             color: var(--text-primary) !important;
+            border-radius: 8px !important;
+            margin: 2px 0 !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
         }
         
-        body[data-theme="dark"] .dropdown-item:hover {
-            background-color: var(--bg-tertiary) !important;
-            color: var(--text-primary) !important;
+        body[data-theme="dark"] .dropdown-item:hover,
+        body[data-theme="dark"] .dropdown-item:focus {
+            background: linear-gradient(145deg, var(--bg-tertiary), var(--bg-quaternary)) !important;
+            color: var(--accent-primary) !important;
+            transform: translateX(4px) !important;
+            box-shadow: 0 4px 15px var(--shadow-light) !important;
         }
         
         body[data-theme="dark"] .dropdown-divider {
             border-color: var(--border-primary) !important;
+            margin: 8px 0 !important;
         }
         
         /* Pagination */
@@ -688,13 +851,34 @@
             border-color: #4dabf7 !important;
         }
         
-        /* Navigation */
+        /* Enhanced Navigation with glassmorphism */
         body[data-theme="dark"] .navbar-dark {
-            background: linear-gradient(135deg, #212529 0%, #343a40 100%) !important;
+            background: linear-gradient(135deg, rgba(18, 18, 18, 0.95) 0%, rgba(30, 30, 30, 0.95) 100%) !important;
+            backdrop-filter: blur(20px) !important;
+            border-bottom: 1px solid var(--border-primary) !important;
+            box-shadow: 0 8px 32px var(--shadow-light) !important;
+        }
+        
+        body[data-theme="dark"] .navbar-nav .nav-link {
+            color: var(--text-secondary) !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+        
+        body[data-theme="dark"] .navbar-nav .nav-link:hover,
+        body[data-theme="dark"] .navbar-nav .nav-link:focus {
+            color: var(--accent-primary) !important;
+            text-shadow: 0 0 8px rgba(77, 171, 247, 0.5) !important;
+        }
+        
+        body[data-theme="dark"] .navbar-brand {
+            color: var(--text-primary) !important;
+            text-shadow: 0 0 10px rgba(77, 171, 247, 0.3) !important;
         }
         
         body[data-theme="dark"] .footer {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%) !important;
+            background: linear-gradient(135deg, rgba(18, 18, 18, 0.95) 0%, rgba(22, 33, 62, 0.95) 100%) !important;
+            border-top: 1px solid var(--border-primary) !important;
+            backdrop-filter: blur(20px) !important;
         }
         
         /* Text colors */
@@ -706,10 +890,11 @@
             color: var(--text-secondary) !important;
         }
         
-        /* Stats and progress bars */
+        /* Enhanced stats, progress bars and interactive elements for dark theme */
         body[data-theme="dark"] .stats-number,
         body[data-theme="dark"] .stat-value {
             color: var(--text-primary) !important;
+            text-shadow: 0 0 10px rgba(77, 171, 247, 0.3) !important;
         }
         
         body[data-theme="dark"] .stats-label,
@@ -719,6 +904,38 @@
         
         body[data-theme="dark"] .stats-detail {
             color: var(--text-muted) !important;
+        }
+        
+        /* Enhanced progress bars */
+        body[data-theme="dark"] .progress {
+            background: linear-gradient(145deg, var(--bg-tertiary), var(--bg-quaternary)) !important;
+            border: 1px solid var(--border-primary) !important;
+            box-shadow: inset 0 2px 4px var(--shadow-light) !important;
+        }
+        
+        body[data-theme="dark"] .progress-bar {
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary)) !important;
+            box-shadow: 
+                0 0 10px rgba(77, 171, 247, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        body[data-theme="dark"] .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            animation: progressShine 2s infinite;
+        }
+        
+        @keyframes progressShine {
+            0% { left: -100%; }
+            100% { left: 100%; }
         }
         
         /* Quick product buttons */
@@ -774,35 +991,41 @@
             color: var(--text-muted) !important;
         }
         
-        /* Alerts and notifications */
+        /* Enhanced Alerts and notifications with better theming */
         body[data-theme="dark"] .alert {
-            background-color: var(--bg-secondary) !important;
-            border-color: var(--border-primary) !important;
+            background: linear-gradient(145deg, var(--bg-secondary), var(--bg-tertiary)) !important;
+            border: 1px solid var(--border-primary) !important;
             color: var(--text-primary) !important;
+            backdrop-filter: blur(10px) !important;
+            box-shadow: 0 4px 20px var(--shadow-light) !important;
         }
         
         body[data-theme="dark"] .alert-info {
-            background-color: rgba(77, 171, 247, 0.1) !important;
-            border-color: rgba(77, 171, 247, 0.3) !important;
-            color: #74c0fc !important;
+            background: linear-gradient(145deg, rgba(116, 192, 252, 0.15), rgba(77, 171, 247, 0.1)) !important;
+            border: 1px solid rgba(116, 192, 252, 0.3) !important;
+            color: var(--info-color) !important;
+            box-shadow: 0 4px 20px rgba(116, 192, 252, 0.2) !important;
         }
         
         body[data-theme="dark"] .alert-success {
-            background-color: rgba(40, 167, 69, 0.1) !important;
-            border-color: rgba(40, 167, 69, 0.3) !important;
-            color: #51cf66 !important;
+            background: linear-gradient(145deg, rgba(81, 207, 102, 0.15), rgba(64, 192, 87, 0.1)) !important;
+            border: 1px solid rgba(81, 207, 102, 0.3) !important;
+            color: var(--success-color) !important;
+            box-shadow: 0 4px 20px rgba(81, 207, 102, 0.2) !important;
         }
         
         body[data-theme="dark"] .alert-warning {
-            background-color: rgba(255, 193, 7, 0.1) !important;
-            border-color: rgba(255, 193, 7, 0.3) !important;
-            color: #ffd43b !important;
+            background: linear-gradient(145deg, rgba(255, 212, 59, 0.15), rgba(255, 193, 7, 0.1)) !important;
+            border: 1px solid rgba(255, 212, 59, 0.3) !important;
+            color: var(--warning-color) !important;
+            box-shadow: 0 4px 20px rgba(255, 212, 59, 0.2) !important;
         }
         
         body[data-theme="dark"] .alert-danger {
-            background-color: rgba(220, 53, 69, 0.1) !important;
-            border-color: rgba(220, 53, 69, 0.3) !important;
-            color: #ff6b6b !important;
+            background: linear-gradient(145deg, rgba(255, 107, 107, 0.15), rgba(220, 53, 69, 0.1)) !important;
+            border: 1px solid rgba(255, 107, 107, 0.3) !important;
+            color: var(--error-color) !important;
+            box-shadow: 0 4px 20px rgba(255, 107, 107, 0.2) !important;
         }
         
         /* Modal enhancements */
@@ -831,7 +1054,30 @@
                        box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
-        /* Dark theme toggle button enhancement */
+        /* Enhanced Dark theme toggle button */
+        body[data-theme="dark"] #themeToggle {
+            background: linear-gradient(145deg, var(--bg-tertiary), var(--bg-quaternary)) !important;
+            border: 1px solid var(--border-primary) !important;
+            color: var(--accent-primary) !important;
+            box-shadow: 
+                0 4px 15px var(--shadow-light),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+        
+        body[data-theme="dark"] #themeToggle:hover {
+            background: linear-gradient(145deg, var(--bg-quaternary), var(--bg-tertiary)) !important;
+            border-color: var(--accent-primary) !important;
+            box-shadow: 
+                0 8px 25px rgba(77, 171, 247, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+            transform: translateY(-2px) scale(1.05) !important;
+        }
+        
+        body[data-theme="dark"] #themeToggle::before {
+            background: linear-gradient(90deg, transparent, rgba(77, 171, 247, 0.2), transparent) !important;
+        }
+        
         #themeToggle {
             position: relative;
             overflow: hidden;
