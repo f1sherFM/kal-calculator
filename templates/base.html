@@ -65,10 +65,55 @@
             margin: 15px 0;
         }
         
+        /* Enhanced Modern Effects */
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        
+        .floating-animation {
+            animation: floatingGentle 6s ease-in-out infinite;
+        }
+        
+        @keyframes floatingGentle {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+        
+        /* Enhanced hover effects for all cards */
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        /* Smooth page transitions */
+        .page-transition {
+            animation: pageSlideIn 0.6s ease-out;
+        }
+        
+        @keyframes pageSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
         body {
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            background-attachment: fixed;
         }
         
         main {
@@ -665,7 +710,7 @@
                         <i class="fas fa-copyright"></i> 
                     </span>
                     <span>
-                        <i class="fas fa-tag"></i> 1.4.0 (1.3.1->1.3.2)
+                        <i class="fas fa-tag"></i> 1.4.1 (1.3.2->1.4.0)
                     </span>
                 </div>
             </div>
