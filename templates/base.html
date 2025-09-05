@@ -65,6 +65,65 @@
             margin: 15px 0;
         }
         
+        /* Animated background elements */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(248, 249, 250, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(233, 236, 239, 0.2) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(222, 226, 230, 0.15) 0%, transparent 50%);
+            animation: floatingBubbles 25s ease-in-out infinite;
+            pointer-events: none;
+            z-index: -2;
+        }
+        
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(45deg, rgba(173, 181, 189, 0.01) 25%, transparent 25%),
+                linear-gradient(-45deg, rgba(173, 181, 189, 0.01) 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, rgba(173, 181, 189, 0.01) 75%),
+                linear-gradient(-45deg, transparent 75%, rgba(173, 181, 189, 0.01) 75%);
+            background-size: 40px 40px;
+            background-position: 0 0, 0 20px, 20px -20px, -20px 0px;
+            animation: patternMove 30s linear infinite;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        @keyframes floatingBubbles {
+            0%, 100% {
+                transform: translateY(0px) rotate(0deg);
+                opacity: 0.7;
+            }
+            33% {
+                transform: translateY(-30px) rotate(120deg);
+                opacity: 0.9;
+            }
+            66% {
+                transform: translateY(-60px) rotate(240deg);
+                opacity: 0.6;
+            }
+        }
+        
+        @keyframes patternMove {
+            0% {
+                background-position: 0 0, 0 20px, 20px -20px, -20px 0px;
+            }
+            100% {
+                background-position: 40px 40px, 40px 60px, 60px 20px, 20px 40px;
+            }
+        }
         /* Enhanced Modern Effects */
         .glass-effect {
             background: rgba(255, 255, 255, 0.25);
@@ -85,10 +144,154 @@
             }
         }
         
-        /* Enhanced hover effects for all cards */
+        /* Animated geometric shapes */
+        .animated-shapes {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            overflow: hidden;
+        }
+        
+        .shape {
+            position: absolute;
+            opacity: 0.03;
+            animation-duration: 25s;
+            animation-iteration-count: infinite;
+            animation-timing-function: linear;
+        }
+        
+        .shape-1 {
+            top: 10%;
+            left: 10%;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(45deg, rgba(108, 117, 125, 0.1), rgba(173, 181, 189, 0.08));
+            border-radius: 50%;
+            animation-name: float1;
+            animation-duration: 35s;
+        }
+        
+        .shape-2 {
+            top: 20%;
+            right: 15%;
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(45deg, rgba(222, 226, 230, 0.1), rgba(206, 212, 218, 0.08));
+            transform: rotate(45deg);
+            animation-name: float2;
+            animation-duration: 40s;
+        }
+        
+        .shape-3 {
+            bottom: 20%;
+            left: 20%;
+            width: 80px;
+            height: 30px;
+            background: linear-gradient(45deg, rgba(173, 181, 189, 0.08), rgba(108, 117, 125, 0.06));
+            border-radius: 15px;
+            animation-name: float3;
+            animation-duration: 32s;
+        }
+        
+        .shape-4 {
+            top: 60%;
+            right: 25%;
+            width: 35px;
+            height: 35px;
+            background: linear-gradient(45deg, rgba(206, 212, 218, 0.08), rgba(222, 226, 230, 0.06));
+            border-radius: 50%;
+            animation-name: float4;
+            animation-duration: 38s;
+        }
+        
+        @keyframes float1 {
+            0%, 100% {
+                transform: translateY(0px) rotate(0deg);
+            }
+            50% {
+                transform: translateY(-100px) rotate(180deg);
+            }
+        }
+        
+        @keyframes float2 {
+            0%, 100% {
+                transform: translateX(0px) rotate(45deg);
+            }
+            50% {
+                transform: translateX(-150px) rotate(225deg);
+            }
+        }
+        
+        @keyframes float3 {
+            0%, 100% {
+                transform: translateY(0px) translateX(0px) rotate(0deg);
+            }
+            25% {
+                transform: translateY(-50px) translateX(100px) rotate(90deg);
+            }
+            75% {
+                transform: translateY(50px) translateX(-100px) rotate(270deg);
+            }
+        }
+        
+        @keyframes float4 {
+            0%, 100% {
+                transform: translateY(0px) scale(1);
+            }
+            33% {
+                transform: translateY(-80px) scale(1.2);
+            }
+            66% {
+                transform: translateY(80px) scale(0.8);
+            }
+        }
+        
+        /* Dynamic particle animation */
+        @keyframes dynamicFloat {
+            0%, 100% {
+                transform: translateY(0px) translateX(0px) rotate(0deg) scale(1);
+            }
+            25% {
+                transform: translateY(-100px) translateX(50px) rotate(90deg) scale(1.1);
+            }
+            50% {
+                transform: translateY(-50px) translateX(-50px) rotate(180deg) scale(0.9);
+            }
+            75% {
+                transform: translateY(100px) translateX(25px) rotate(270deg) scale(1.05);
+            }
+        }
+        
+        /* Responsive animations */
+        @media (max-width: 768px) {
+            .shape {
+                opacity: 0.02;
+            }
+            
+            body::before, body::after {
+                animation-duration: 40s; /* Much slower animations on mobile */
+                opacity: 0.5;
+            }
+            
+            body {
+                animation-duration: 30s; /* Slower gradient shift on mobile */
+            }
+        }
+        
+        /* CSS variables for mouse interaction */
+        :root {
+            --mouse-x: 50%;
+            --mouse-y: 50%;
+        }
+        
+        /* Enhanced hover effects for all cards with animated shadows */
         .card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1), 0 0 20px rgba(102, 126, 234, 0.1);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
@@ -112,8 +315,25 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            background: linear-gradient(-45deg, #f8f9fa, #e9ecef, #dee2e6, #ced4da, #adb5bd, #6c757d);
+            background-size: 400% 400%;
             background-attachment: fixed;
+            animation: gradientShift 20s ease infinite;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        /* Animated background gradient */
+        @keyframes gradientShift {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
         }
         
         main {
@@ -571,6 +791,13 @@
     </style>
 </head>
 <body class="bg-light">
+    <!-- Animated background shapes -->
+    <div class="animated-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+        <div class="shape shape-4"></div>
+    </div>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
             <a class="navbar-brand" href="{{ url_for('index') }}">
@@ -911,7 +1138,92 @@
         // Инициализируем тему при загрузке страницы
         document.addEventListener('DOMContentLoaded', function() {
             initTheme();
+            initAnimatedBackground();
         });
+        
+        // Initialize animated background effects
+        function initAnimatedBackground() {
+            createDynamicParticles();
+            addMouseInteractivity();
+            addScrollEffects();
+        }
+        
+        // Create dynamic floating particles
+        function createDynamicParticles() {
+            const particleCount = window.innerWidth > 768 ? 8 : 4;
+            const container = document.querySelector('.animated-shapes');
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'dynamic-particle';
+                
+                const size = Math.random() * 12 + 6;
+                const animationDuration = Math.random() * 25 + 20;
+                const delay = Math.random() * 8;
+                
+                particle.style.cssText = `
+                    position: absolute;
+                    width: ${size}px;
+                    height: ${size}px;
+                    background: linear-gradient(45deg, 
+                        rgba(173, 181, 189, ${Math.random() * 0.08 + 0.02}), 
+                        rgba(108, 117, 125, ${Math.random() * 0.06 + 0.01}));
+                    border-radius: 50%;
+                    left: ${Math.random() * 100}%;
+                    top: ${Math.random() * 100}%;
+                    animation: dynamicFloat ${animationDuration}s ease-in-out infinite;
+                    animation-delay: ${delay}s;
+                    pointer-events: none;
+                    opacity: 0.3;
+                `;
+                
+                container.appendChild(particle);
+            }
+        }
+        
+        // Add mouse interactivity
+        function addMouseInteractivity() {
+            let mouseX = 0, mouseY = 0;
+            
+            document.addEventListener('mousemove', function(e) {
+                mouseX = (e.clientX / window.innerWidth) * 100;
+                mouseY = (e.clientY / window.innerHeight) * 100;
+                
+                // Update CSS custom properties for mouse-based animations
+                document.documentElement.style.setProperty('--mouse-x', mouseX + '%');
+                document.documentElement.style.setProperty('--mouse-y', mouseY + '%');
+                
+                // Interactive gradient shift
+                document.body.style.backgroundPosition = `${mouseX}% ${mouseY}%`;
+            });
+        }
+        
+        // Add scroll-based effects
+        function addScrollEffects() {
+            let ticking = false;
+            
+            function updateScrollEffects() {
+                const scrolled = window.pageYOffset;
+                const rate = scrolled * -0.5;
+                
+                const shapes = document.querySelectorAll('.shape');
+                shapes.forEach((shape, index) => {
+                    const speed = (index + 1) * 0.3;
+                    shape.style.transform += ` translateY(${rate * speed}px)`;
+                });
+                
+                ticking = false;
+            }
+            
+            function requestTick() {
+                if (!ticking) {
+                    requestAnimationFrame(updateScrollEffects);
+                    ticking = true;
+                }
+            }
+            
+            window.addEventListener('scroll', requestTick);
+        }
     </script>
     
     {% block scripts %}{% endblock %}
