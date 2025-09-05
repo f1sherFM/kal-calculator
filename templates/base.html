@@ -280,6 +280,108 @@
             body {
                 animation-duration: 30s; /* Slower gradient shift on mobile */
             }
+            
+            /* Reduce motion for better performance */
+            .card:hover {
+                transform: none;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            }
+            
+            .floating-animation {
+                animation: none;
+            }
+            
+            /* Improve touch targets */
+            .btn {
+                min-height: 44px;
+                min-width: 44px;
+                padding: 12px 16px;
+                border-radius: 8px;
+                -webkit-tap-highlight-color: rgba(0,0,0,0.1);
+                touch-action: manipulation;
+            }
+            
+            .nav-link {
+                min-height: 48px;
+                display: flex;
+                align-items: center;
+                padding: 12px 16px;
+                -webkit-tap-highlight-color: rgba(0,0,0,0.1);
+                touch-action: manipulation;
+            }
+            
+            /* Better mobile navbar */
+            .navbar-toggler {
+                border: none;
+                padding: 8px;
+                border-radius: 8px;
+                min-width: 44px;
+                min-height: 44px;
+                -webkit-tap-highlight-color: rgba(0,0,0,0.1);
+            }
+            
+            .navbar-toggler:focus {
+                box-shadow: none;
+            }
+            
+            /* Mobile-friendly form controls */
+            .form-control, .form-select {
+                min-height: 44px;
+                font-size: 16px; /* Prevents zoom on iOS */
+                border-radius: 8px;
+                -webkit-appearance: none;
+                appearance: none;
+            }
+            
+            /* Better mobile cards */
+            .card {
+                border-radius: 12px;
+                margin-bottom: 16px;
+            }
+            
+            /* Optimize text for mobile */
+            h1 { font-size: 1.8rem; }
+            h2 { font-size: 1.5rem; }
+            h3 { font-size: 1.3rem; }
+            h4 { font-size: 1.1rem; }
+            
+            /* Better spacing for mobile */
+            .container {
+                padding-left: 12px;
+                padding-right: 12px;
+            }
+            
+            /* Mobile toast adjustments */
+            .modern-toast {
+                min-width: calc(100vw - 24px);
+                max-width: calc(100vw - 24px);
+                margin: 0 12px;
+            }
+        }
+        
+        /* Small mobile devices */
+        @media (max-width: 480px) {
+            .modern-toast {
+                min-width: calc(100vw - 16px);
+                max-width: calc(100vw - 16px);
+                margin: 0 8px;
+                font-size: 0.9rem;
+            }
+            
+            .container {
+                padding-left: 8px;
+                padding-right: 8px;
+            }
+            
+            .btn {
+                font-size: 0.9rem;
+                padding: 10px 14px;
+            }
+            
+            h1 { font-size: 1.6rem; }
+            h2 { font-size: 1.3rem; }
+            h3 { font-size: 1.1rem; }
+            h4 { font-size: 1rem; }
         }
         
         /* CSS variables for mouse interaction */
@@ -1139,26 +1241,96 @@
         document.addEventListener('DOMContentLoaded', function() {
             initTheme();
             initAnimatedBackground();
+            initMobileOptimizations();
         });
+        
+        // Mobile-specific optimizations
+        function initMobileOptimizations() {
+            const isMobile = window.innerWidth <= 768;
+            
+            if (isMobile) {
+                // Improve touch scrolling on iOS
+                document.body.style.webkitOverflowScrolling = 'touch';
+                
+                // Add touch feedback to all buttons
+                const buttons = document.querySelectorAll('.btn, .nav-link');
+                buttons.forEach(button => {
+                    button.addEventListener('touchstart', function() {
+                        this.style.transform = 'scale(0.98)';
+                        this.style.opacity = '0.8';
+                    });
+                    
+                    button.addEventListener('touchend', function() {
+                        this.style.transform = 'scale(1)';
+                        this.style.opacity = '1';
+                    });
+                });
+                
+                // Prevent zoom on form inputs (iOS)
+                const inputs = document.querySelectorAll('input, select, textarea');
+                inputs.forEach(input => {
+                    if (input.style.fontSize === '' || parseFloat(input.style.fontSize) < 16) {
+                        input.style.fontSize = '16px';
+                    }
+                });
+                
+                // Optimize navbar collapse behavior
+                const navbarToggler = document.querySelector('.navbar-toggler');
+                const navbarCollapse = document.querySelector('.navbar-collapse');
+                
+                if (navbarToggler && navbarCollapse) {
+                    // Close navbar when clicking outside
+                    document.addEventListener('click', function(e) {
+                        if (!navbarToggler.contains(e.target) && !navbarCollapse.contains(e.target)) {
+                            const bsCollapse = bootstrap.Collapse.getInstance(navbarCollapse);
+                            if (bsCollapse && navbarCollapse.classList.contains('show')) {
+                                bsCollapse.hide();
+                            }
+                        }
+                    });
+                    
+                    // Close navbar when clicking on nav links
+                    const navLinks = navbarCollapse.querySelectorAll('.nav-link');
+                    navLinks.forEach(link => {
+                        link.addEventListener('click', function() {
+                            const bsCollapse = bootstrap.Collapse.getInstance(navbarCollapse);
+                            if (bsCollapse && navbarCollapse.classList.contains('show')) {
+                                setTimeout(() => bsCollapse.hide(), 100);
+                            }
+                        });
+                    });
+                }
+            }
+        }
         
         // Initialize animated background effects
         function initAnimatedBackground() {
-            createDynamicParticles();
-            addMouseInteractivity();
+            const isMobile = window.innerWidth <= 768;
+            const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            
+            // Skip heavy animations on mobile or if user prefers reduced motion
+            if (!isMobile && !prefersReducedMotion) {
+                createDynamicParticles();
+                addMouseInteractivity();
+            }
+            
             addScrollEffects();
         }
         
         // Create dynamic floating particles
         function createDynamicParticles() {
-            const particleCount = window.innerWidth > 768 ? 8 : 4;
+            const isMobile = window.innerWidth <= 768;
+            const particleCount = isMobile ? 3 : 8; // Fewer particles on mobile
             const container = document.querySelector('.animated-shapes');
+            
+            if (!container) return;
             
             for (let i = 0; i < particleCount; i++) {
                 const particle = document.createElement('div');
                 particle.className = 'dynamic-particle';
                 
-                const size = Math.random() * 12 + 6;
-                const animationDuration = Math.random() * 25 + 20;
+                const size = isMobile ? Math.random() * 8 + 4 : Math.random() * 12 + 6;
+                const animationDuration = isMobile ? Math.random() * 40 + 30 : Math.random() * 25 + 20;
                 const delay = Math.random() * 8;
                 
                 particle.style.cssText = `
@@ -1166,15 +1338,15 @@
                     width: ${size}px;
                     height: ${size}px;
                     background: linear-gradient(45deg, 
-                        rgba(173, 181, 189, ${Math.random() * 0.08 + 0.02}), 
-                        rgba(108, 117, 125, ${Math.random() * 0.06 + 0.01}));
+                        rgba(173, 181, 189, ${Math.random() * 0.06 + 0.01}), 
+                        rgba(108, 117, 125, ${Math.random() * 0.04 + 0.005}));
                     border-radius: 50%;
                     left: ${Math.random() * 100}%;
                     top: ${Math.random() * 100}%;
                     animation: dynamicFloat ${animationDuration}s ease-in-out infinite;
                     animation-delay: ${delay}s;
                     pointer-events: none;
-                    opacity: 0.3;
+                    opacity: ${isMobile ? 0.2 : 0.3};
                 `;
                 
                 container.appendChild(particle);
