@@ -57,10 +57,11 @@ def get_current_user():
     """Get current user from session"""
     user_id = session.get('user_id')
     if user_id:
-        user = User.query.get(user_id)
+        user = db.session.get(User, user_id)
         if user:
             return user
     return None
+
 
 # Функции для системы уровней
 def get_or_create_user_level(user_id: int) -> 'UserLevel':
